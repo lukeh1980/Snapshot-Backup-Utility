@@ -29,11 +29,12 @@ You can read full instructions by typing "sbu --help" at the command prompt. Usa
 	
 	sbu --create job-name --source /my/source/directory --dest /my/backup/directory --interval 30 --days-to-keep 30
 
-This will create a new directory for snapshots: /my/backup/directory/job-name/snapshots
+NOTE: --interval is in minutes and --days-to-keep is in days. 
+This will create a new directory for snapshots in /my/backup/directory/job-name/snapshots.
 The initial full sync is named job-name.full, subsequent snapshots are named job-name.0, job-name.1, job-name.2, etc. The newest snapshot is always job-name.0, as snapshots reach the --days-to-keep limit they will be rolled into job-name.full. Each snapshot has a timestamp file and a snapshot-time file with the number of minutes the snapshot took to create.
 
 # RESTORE SNAPSHOTS
-Restoration tools are planned in the future but for now you can simply copy files from a snapshot to restore from backups.
+Restoration tools are planned in the future but for now you can simply copy files from a snapshot directory to restore from SBU backups.
 
 # RECONFIGURING JOBS
 You can reconfigure some features of a running job, more are planned in the future.
@@ -46,7 +47,7 @@ Set full sync option (default is on):
 
 	sbu --full-sync on/off --name job-name
 		
-You can make some changes to the config file for each job located at /opt/sbu/jobs/job-name/job-name.conf. This may have unpredictable results, use with caution. You should be able to change the Interval and Retention (days to keep) settings on running jobs, settings will take affect on the next interval. Changing source and destination directories here will result in failure, a new job should be created to change these.
+You can also make changes to the config file for each job. Config files are located at /opt/sbu/jobs/job-name/job-name.conf. WARNING: This may have unpredictable results, use with caution. You should be able to change the Interval and Retention (days to keep) settings on running jobs, settings will take affect on the next interval. Changing source and destination directories will result in backup failures, a new job should be created to change these.
 
 # REMOVING JOBS
 You can remove jobs using (it will prompt to delete backup files): 
