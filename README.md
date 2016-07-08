@@ -6,17 +6,27 @@ Due to the use of hard links SBU requires the destination file system to be Linu
 # INSTALLATION
 Follow these steps to install SBU:
 
-1) Download the tar file named sbu-x.x.x-install.tar and extract it on your Linux system:
-		tar -xaf sbu-x.x.x-install.tar
-2) Change directory to extracted folder, you will find 3 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh. CHMOD install/uninstall scripts to be executable:
-		chmod +x install-sbu.sh uninstall-sbu.sh
-3) Run install-sbu.sh:
-		./install-sbu.sh
+Download the tar file named sbu-x.x.x-install.tar and extract it on your Linux system:
+	
+	tar -xaf sbu-x.x.x-install.tar
+	
+Change directory to extracted folder:
+
+	cd sbu-x.x.x
+	
+You will find 3 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh. CHMOD install/uninstall scripts to be executable:
+	
+	chmod +x install-sbu.sh uninstall-sbu.sh
+
+Run install-sbu.sh:
+		
+	./install-sbu.sh
 
 SBU will prompt you to skip or install rsync. If you select y it will attempt to check for a redhat release and if not use apt-get to install rsync. If you get an error you can re run the install script without installing rsync and install it on your own. You will need to have rsync installed before using SBU.
 
 # USAGE EXAMPLE
 You can read full instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, to create a job type: 
+	
 	sbu --create job-name --source /my/source/directory --dest /my/backup/directory --interval 30 --days-to-keep 30
 
 This will create a new directory for snapshots: /my/backup/directory/job-name/snapshots
@@ -29,36 +39,49 @@ Restoration tools are planned in the future but for now you can simply copy file
 You can reconfigure some features of a running job, more are planned in the future.
 
 Set autostart (default is on):
+	
 	sbu --autostart on/off --name job-name
+	
 Set full sync option (default is on):
+
 	sbu --full-sync on/off --name job-name
 		
 You can make some changes to the config file for each job located at /opt/sbu/jobs/job-name/job-name.conf. This may have unpredictable results, use with caution. You should be able to change the Interval and Retention (days to keep) settings on running jobs, settings will take affect on the next interval. Changing source and destination directories here will result in failure, a new job should be created to change these.
 
 # REMOVING JOBS
 You can remove jobs using (it will prompt to delete backup files): 
+
 	sbu --remove job-name
+	
 To delete a job and backup files without prompting use:
+
 	sbu --remove job-name --force-delete
 	
 Since deleting many snapshots of large directories can take a long time (days even) the job-name directory is renamed to a temp name: .job-name.deleting. SBU will try to delete this directory as long as it exists even if it is interrupted or the server is rebooted before the delete is complete.
 
 # VIEWING JOB STATUS
-You can check job status by typing: 
+You can check job status by typing:
+
 	sbu --status job-name
+	
 View all job statuses:
+
 	sbu --status
+	
 Watch live status of jobs:
+
 	watch sbu --status
 
 # RESTARTING JOBS
-If you need to restart or stop a job type: 
+If you need to restart, stop or start a job type:
+
 	sbu --restart job-name
 	sbu --stop job-name
 	sbu --start job-name
 
 # STARTING JOBS ON BOOTUP
 By default any job you create will automatically start at bootup, you can turn this off by typing: 
+
 	sbu --autostart off --name job-name
 
 # FULL SYNC MODE
