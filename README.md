@@ -6,12 +6,12 @@ Due to the use of hard links SBU requires the destination file system to be Linu
 # INSTALLATION
 Follow these steps to install SBU:
 
-	1) Download the tar file named sbu-x.x.x-install.tar and extract it on your Linux system:
-			tar -xaf sbu-x.x.x-install.tar
-	2) Change directory to extracted folder, you will find 3 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh. CHMOD install/uninstall scripts to be executable:
-			chmod +x install-sbu.sh uninstall-sbu.sh
-	3) Run install-sbu.sh:
-			./install-sbu.sh
+1) Download the tar file named sbu-x.x.x-install.tar and extract it on your Linux system:
+	tar -xaf sbu-x.x.x-install.tar
+2) Change directory to extracted folder, you will find 3 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh. CHMOD install/uninstall scripts to be executable:
+	chmod +x install-sbu.sh uninstall-sbu.sh
+3) Run install-sbu.sh:
+	./install-sbu.sh
 
 SBU will prompt you to skip or install rsync. If you select y it will attempt to check for a redhat release and if not use apt-get to install rsync. If you get an error you can re run the install script without installing rsync and install it on your own. You will need to have rsync installed before using SBU.
 
