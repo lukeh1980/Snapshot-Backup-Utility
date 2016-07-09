@@ -1,7 +1,0 @@
-# SBU 0.4.0 Roadmap
-- Add --view-config option to output the configuration of jobs.
-- Add --set-interval and --set-retention options to update config of jobs.
-- Change --days-to-keep to --retention.
-- Change --stop and --restart function to wait until the job is idle before killing processes, --force option will kill without waiting.
-- Create upgrade script.
-- Create --import and --export functions for migrating jobs.
