@@ -1,4 +1,4 @@
-Version 0.3.4
+Version 0.3.5
 
 SBU (Snapshot Backup Utility) makes an initial full copy to the /destination/backup-name/snapshots/backup-name.full directory.
 Snapshots are created by hard linking the previous snapshots to the next snapshot directory and then syncing any changed files from the previous interval.
