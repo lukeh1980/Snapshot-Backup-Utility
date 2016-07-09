@@ -30,29 +30,56 @@ MARG=1
 
 # /opt/sbu/source/create-new-job.sh /extdata/source /extdata/dest my-backup 1 1 on
 
-# Passed minimum syntax input checks, clear screen and create new job:
-
 # Create log file entries in /var/log:
 if [ ! -d "/var/log/sbu/$NAME" ]; then
-	echo "Creating log file entry in /var/log/sbu/$NAME..."
 	mkdir -p /var/log/sbu/$NAME
 	echo "------------Creating new backup job for $NAME------------" >> /var/log/sbu/$NAME/sbulog
 else
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR CREATING JOB: /var/log/sbu/$NAME already exists!" >> /var/log/sbu/$NAME/sbulog
+	echo "ERROR CREATING JOB: /var/log/sbu/$NAME already exists! If you feel this is in error run \"sbu --clean $NAME\" to remove old job information then try again." >> /var/log/sbu/$NAME-job-creation-error
 	exit
 fi
-echo ""
+
+# Start creating new job:
+if [ ! -d "/opt/sbu/jobs/$NAME" ]; then
+	
+	echo "Creating jobs folder for $NAME..."
+	mkdir -p "/opt/sbu/jobs/$NAME" >> /var/log/sbu/$NAME/sbulog
+	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating jobs folder in /opt/sbu for $NAME" >> /var/log/sbu/$NAME/sbulog
+	
+	if [ ! -d "/opt/sbu/jobs/$NAME" ]; then
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: Could not create jobs folder!" >> /var/log/sbu/$NAME/sbulog
+		echo "ERROR: Could not create jobs folder!" >> /var/log/sbu/$NAME-job-creation-error
+		exit
+	fi
+	
+	# Create config file for new job:
+	echo "Creating config file for $NAME..."
+	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating config file for $NAME" >> /var/log/sbu/$NAME/sbulog
+	/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP $AUTOSTART $MARG
+	
+	if [ ! -s "/opt/sbu/jobs/$NAME/$NAME.conf" ]; then
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: Could not create configuration file!" >> /var/log/sbu/$NAME/sbulog
+		echo "ERROR: Could not create configuration file!" >> /var/log/sbu/$NAME-job-creation-error
+		exit
+	fi
+else
+	echo "ERROR: $NAME already exists! If this is in error try running \"sbu --clean $NAME\" to remove job information and try again." >> /var/log/sbu/$NAME-job-creation-error
+	echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: $NAME already exists!" >> /var/log/sbu/$NAME/sbulog
+	exit
+fi
 
 # Check source and destination directories:
 if [ ! -d "${SOURCE}" ]; then
 	echo "ERROR: $SOURCE is invalid"
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: $SOURCE is invalid" >> /var/log/sbu/$NAME/sbulog
+	echo "ERROR: $SOURCE is invalid" >> /var/log/sbu/$NAME-job-creation-error
 	exit
 fi
 	
 if [ ! -d "${DEST}" ]; then
 	echo "ERROR: $DEST is invalid"
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: $DEST is invalid" >> /var/log/sbu/$NAME/sbulog
+	echo "ERROR: $DEST is invalid" >> /var/log/sbu/$NAME-job-creation-error
 	exit
 fi
 
@@ -71,36 +98,6 @@ fi
 
 echo "Setting retention policy to $DAYSTOKEEP days..."
 echo $(date "+%Y-%m-%d %H:%M:%S")" - Using retention policy of $DAYSTOKEEP days" >> /var/log/sbu/$NAME/sbulog
-
-# Start creating new job:
-if [ ! -d "/opt/sbu/jobs/$NAME" ]; then
-	
-	echo "Creating jobs folder for $NAME..."
-	mkdir -p "/opt/sbu/jobs/$NAME" >> /var/log/sbu/$NAME/sbulog
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating jobs folder in /opt/sbu for $NAME" >> /var/log/sbu/$NAME/sbulog
-	
-	# Create config file for new job:
-	echo "Creating config file for $NAME..."
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating config file for $NAME" >> /var/log/sbu/$NAME/sbulog
-	/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP $AUTOSTART $MARG
-	
-else
-	if [[ $overWrite == "y" ]]; then
-		
-		rm -rf /opt/sbu/jobs/$NAME
-		mkdir -p "/opt/sbu/jobs/$NAME" >> /var/log/sbu/$NAME/sbulog
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating jobs folder in /opt/sbu for $NAME" >> /var/log/sbu/$NAME/sbulog
-		
-		# Create config file for new job:
-		echo "Creating config file for $NAME..."
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating config file for $NAME" >> /var/log/sbu/$NAME/sbulog
-		/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP $AUTOSTART $MARG
-		
-	else
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR CREATING JOB: /opt/sbu/jobs/$NAME exists!" >> /var/log/sbu/$NAME/sbulog
-		exit
-	fi
-fi
 
 echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-initializing
 INITIALIZED=0
@@ -149,16 +146,21 @@ then
 		echo "Creating directory: $DEST/$NAME/snapshots/$NAME.full$SOURCE"
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating directory: $DEST/$NAME/snapshots/$NAME.full$SOURCE" >> /var/log/sbu/$NAME/sbulog
 		mkdir -p "${DEST}/$NAME/snapshots/$NAME.full${SOURCE}" >> /var/log/sbu/$NAME/sbulog 2>&1
-		DIRECTORYERROR-0
+		
+		if [ ! -d "${DEST}/$NAME/snapshots/$NAME.full${SOURCE}" ]; then
+			echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: Could not create snapshot directories: ${DEST}/$NAME/snapshots/$NAME.full${SOURCE}" >> /var/log/sbu/$NAME/sbulog
+			echo "ERROR: Could not create snapshot directories: ${DEST}/$NAME/snapshots/$NAME.full${SOURCE}" >> /var/log/sbu/$NAME-job-creation-error
+			exit
+		fi
 	else
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: Cannot create destination snapshots folder. Please check destination and permissions of folder." >> /var/log/sbu/$NAME/sbulog
-		DIRECTORYERROR=1
+		echo "ERROR: Cannot create destination snapshots folder. Please check destination and permissions of folder." >> /var/log/sbu/$NAME-job-creation-error
 		exit
 	fi
 	
 	FULLDEST="${DEST}/$NAME/snapshots/$NAME.full"
 	
-	echo ""
+	echo "STARTING SYNC"
 	echo "Syncing source and destination directories: $SOURCE/ $FULLDEST$SOURCE/"
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Syncing source and destination directories: $SOURCE/ $FULLDEST$SOURCE/" >> /var/log/sbu/$NAME/sbulog
 	rsync -rltD -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${FULLDEST}${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
@@ -189,11 +191,30 @@ then
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - $INTERVAL Minute Interval Backup for $NAME Initialized" >> /var/log/sbu/$NAME/sbulog
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting job" >> /var/log/sbu/$NAME/sbulog
 	
-	if [[ $DIRECTORYERROR -eq 0 ]]; then
+	if [ -s "${FULLDEST}/timestamp" ]; then
+		CREATIONERROR=0
+	else 
+		CREATIONERROR=1
+	fi
+	
+	if [ -s "/opt/sbu/jobs/$NAME/$NAME-last-full-sync" ]; then
+		CREATIONERROR=0
+	else
+		CREATIONERROR=1
+	fi
+	
+	if [ -s "${DEST}/$NAME/snapshots/$NAME.0/timestamp" ]; then
+		CREATIONERROR=0
+	else
+		CREATIONERROR=1
+	fi
+	
+	if [[ $CREATIONERROR -eq 0 ]]; then
 		rm -rf /opt/sbu/jobs/$NAME/$NAME-initializing
 		nohup /opt/sbu/source/run-job.sh $NAME &>/dev/null &
 	else
-		echo "Could not create directories!"
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR 159: Could not initialize $NAME!" >> /var/log/sbu/$NAME/sbulog
+		exit
 	fi
 	
 	echo "------------------------------" >> /var/log/sbu/$NAME/sbulog

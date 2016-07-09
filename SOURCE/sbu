@@ -23,7 +23,7 @@
 source /opt/sbu/source/functions
 
 # Initialize variables:
-REMOVE=0; STOP=0; START=0; RESTART=0; FORCE=0; NEWJOB=0
+REMOVE=0; CLEAN=0; STOP=0; START=0; RESTART=0; FORCE=0; NEWJOB=0
 
 # First get all input from sbu:
 
@@ -61,6 +61,10 @@ while [ "$1" != "" ]; do
                                 REMOVE=1
 								NAME=$1
                                 ;;
+		--clean )     			shift
+								CLEAN=1
+								NAME=$1
+                                ;;
 		--reinit )				shift
 								REINITIALIZE=1
 								NAME=$1
@@ -94,6 +98,16 @@ done
 # Check for single functions like delete, stop, start, etc:
 if [[ $STATUS -eq 1 ]]; then
 	/opt/sbu/source/get-status.sh $NAME
+fi
+
+if [[ $CLEAN -eq 1 ]]; then
+	
+	if [ -z "$NAME" ]; then
+		echo "ERROR: Can't clean job, please enter a job name." 
+	else
+		/opt/sbu/source/clean-job.sh $NAME
+	fi
+
 fi
 
 if [[ $REMOVE -eq 1 ]]; then
@@ -278,22 +292,16 @@ if [[ $NEWJOB -eq 1 ]]; then
 	fi
 	
 	# Passed minimum input checks, create job:
-	#/opt/sbu/source/create-new-job.sh $SOURCE $DEST $NAME $INTERVAL $DAYSTOKEEP on
 	nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP on &>/dev/null &
 	sleep 1
-	echo ""
-	echo "$NAME has been submitted with a $INTERVAL minute interval and a retention policy of $DAYSTOKEEP days."
-	echo ""
-	if [ "$(sbu --status $NAME)" == "$NAME is stopped" ]; then
-		echo "Job did not start, please check the log: /var/log/sbu/$NAME/sbulog"
+	
+	if [ -s "/var/log/sbu/$NAME-job-creation-error" ]; then
+		echo $(cat /var/log/sbu/$NAME-job-creation-error)
+		rm -rf /var/log/sbu/$NAME-job-creation-error
+		/opt/sbu/source/clean-job.sh $NAME
+		exit
 	else
-		if [ "$(sbu --status $NAME)" == "$NAME job does not exist!" ]; then
-			echo "Job could not be created, please check the logs"
-		else
-			echo "Job created successfully"
-		fi
+		echo "$NAME has been initialized. Run \"sbu --status $NAME\" to view it's status."
 	fi
-	echo ""
-	exit
 	
 fi

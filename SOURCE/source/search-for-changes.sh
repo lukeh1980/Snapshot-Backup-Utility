@@ -31,12 +31,29 @@ NEWDEST="${DEST}/$NAME/snapshots/$NAME.0${SOURCE}/"
 FILEDEST="${DEST}/$NAME/tmp/$INTERVAL-min"
 
 if [ "$FULLSYNC" == "on" ]; then
-	rsync -rltDn --delete --out-format="%f" "${NEWSOURCE}" "${NEWDEST}" > "${FILEDEST}"
+
+	nohup rsync -rltDn --delete --out-format="%f" "${NEWSOURCE}" "${NEWDEST}" > "${FILEDEST}" 2> /dev/null &
+	
+	while :
+	do
+		PID=$(pgrep -f "rsync -rltDn --delete --out-format="%f" ${NEWSOURCE} ${NEWDEST}")
+		if [[ "$PID" > 0 ]]; then
+			# If $FILEDEST has a size greater than 0 then a change was detected, kill the rsync search and go onto to doing a full sync:
+			if [ -s "${FILEDEST}" ]; then
+				kill $PID3
+				rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
+				exit
+			fi
+		else
+			rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
+			exit
+		fi
+		sleep 1
+	done
+	
 else
 	rsync -rltDn --out-format="%f" "${NEWSOURCE}" "${NEWDEST}" > "${FILEDEST}"
+	grep -v "${SOURCE:1}/\." "${FILEDEST}" > "${FILEDEST}.tmp"; mv "${FILEDEST}.tmp" "${FILEDEST}"
+	#find "${FILEDEST}" -type f -print -exec cat {} \; | grep deleting > "${DEST}/$NAME/tmp/delete-check"
+	rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
 fi
-
-grep -v "${SOURCE:1}/\." "${FILEDEST}" > "${FILEDEST}.tmp"; mv "${FILEDEST}.tmp" "${FILEDEST}"
-find "${FILEDEST}" -type f -print -exec cat {} \; | grep deleting > "${DEST}/$NAME/tmp/delete-check"
-
-rm -rf /opt/sbu/jobs/$NAME/$NAME-searching

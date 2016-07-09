@@ -22,8 +22,6 @@
 
 NAME=$1
 
-echo "-----CLEANING FILES ASSOCIATED WITH $NAME-----"
-
 PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh $SOURCE")
 PID2=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
 

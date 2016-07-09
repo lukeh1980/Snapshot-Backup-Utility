@@ -22,8 +22,6 @@
 
 source /opt/sbu/source/header
 
-# SHOULD CONVERT BOTH SYNC TYPES AS FUNCTIONS!
-
 # To help speed up snapshots it only syncs changed files leaving deleted files intact, once a day we do another rsync to clean out delete files from new snapshot:
 CURRTIME=$(date +"%D %T")
 LASTFULL=$(tail -1 /opt/sbu/jobs/$NAME/$NAME-last-full-sync)
@@ -39,20 +37,14 @@ if [[ $NUMDAYS -gt 0 ]]; then
 	echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
 	rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 else
-	if [ -s "${DEST}/$NAME/tmp/delete-check" ]; then
-		if [ "$FULLSYNC" == "on" ]; then
-			echo "Starting full sync..."
-			echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
-			echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-			rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/snapshots/$NAME.0/${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
-			echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
-			rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-		else
-			echo "Syncing changed files only..."
-			echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (CHANGES ONLY)-------" >> /var/log/sbu/$NAME/sbulog
-			echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-			rsync -rltD -e \""ssh -T -c arcfour -o Compression=no -x"\" --files-from="${FILESFROM}" / "${DEST}/$NAME/snapshots/$NAME.0"
-		fi
+	if [ "$FULLSYNC" == "on" ]; then
+		# If full sync is on then the $FILESFROM will only be a partial list of changes since it's not used.
+		echo "Starting full sync..."
+		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
+		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
+		rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/snapshots/$NAME.0/${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+		echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
+		rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 	else
 		echo "Syncing changed files only..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (CHANGES ONLY)-------" >> /var/log/sbu/$NAME/sbulog
@@ -61,5 +53,4 @@ else
 	fi
 fi
 
-rm -rf "${DEST}/$NAME/tmp/delete-check"
 rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
