@@ -57,7 +57,7 @@ You can remove jobs using (it will prompt to delete backup files):
 	
 To delete a job and backup files without prompting use:
 
-	sbu --remove job-name --force-delete
+	sbu --remove job-name --force
 	
 Since deleting many snapshots of large directories can take a long time (days even) the job-name directory is renamed to a temp name: .job-name.deleting. SBU will try to delete this directory as long as it exists even if it is interrupted or the server is rebooted before the delete is complete.
 
