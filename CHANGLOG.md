@@ -5,3 +5,4 @@
 - Added --set-interval function
 - Added --set-retention function
 - Renamed --days-to-keep to --retention
+- Renamed --force-delete to --force to be used with other functions
