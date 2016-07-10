@@ -27,9 +27,9 @@ SBU will prompt you to skip or install rsync. If you select y it will attempt to
 # USAGE EXAMPLE
 You can read full instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, to create a job type: 
 	
-	sbu --create job-name --source /my/source/directory --dest /my/backup/directory --interval 30 --days-to-keep 30
+	sbu --create job-name --source /my/source/directory --dest /my/backup/directory --interval 30 --retention 30
 
-NOTE: --interval is in minutes and --days-to-keep is in days.
+NOTE: --interval is in minutes and --retention is in days.
 
 This will create a new directory for snapshots in /my/backup/directory/job-name/snapshots.
 The initial full sync is named job-name.full, subsequent snapshots are named job-name.0, job-name.1, job-name.2, etc. The newest snapshot is always job-name.0, as snapshots reach the --days-to-keep limit they will be rolled into job-name.full. Each snapshot has a timestamp file and a snapshot-time file with the number of minutes the snapshot took to create.
