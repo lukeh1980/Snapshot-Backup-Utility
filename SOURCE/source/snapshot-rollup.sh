@@ -28,8 +28,6 @@ DIR="${DEST}/$NAME/snapshots/"
 cd "${DIR}"
 echo ""
 echo "------STARTING SNAPSHOT ROLLUP-----"
-echo "..."
-echo $(date "+%Y-%m-%d %H:%M:%S")" - Checking snapshot rollup" >> /var/log/sbu/$NAME/sbulog
 ls -v | grep -v '\.full$' | grep -v 'full-backup.index' | grep -v 'timestamp-full-backup' > "${DEST}/$NAME/tmp/$NAME-dir-list-rollup"
 INCREMENT=$(tail -n 1 "${DEST}/$NAME/tmp/$NAME-dir-list-rollup" | cut -d '.' -f 2)
 
