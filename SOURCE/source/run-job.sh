@@ -48,8 +48,6 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 		echo "Searching for changed files..."
 				
 		# Fire off search in background:
-		#echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-searching
-		#echo $(date "+%Y-%m-%d %H:%M:%S")" - Searching for changes" >> /var/log/sbu/$NAME/sbulog
 		nohup /opt/sbu/source/search-for-changes.sh $NAME &>/dev/null &
 		
 		# This may need to be moved to a better place, checks if snapshots have expired and need to be rolled up:
