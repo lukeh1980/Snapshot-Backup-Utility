@@ -23,7 +23,6 @@
 source /opt/sbu/source/header
 
 #MINUTES=$(($INTERVAL))
-echo $(date "+%Y-%m-%d %H:%M:%S")" - Searching for changes" >> /var/log/sbu/$NAME/sbulog
 echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-searching
 echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-last-file-search
 
