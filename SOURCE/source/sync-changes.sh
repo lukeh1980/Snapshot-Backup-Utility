@@ -33,7 +33,8 @@ if [[ $NUMDAYS -gt 0 ]]; then
 	echo "Starting full sync..."
 	echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
 	echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-	rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/snapshots/$NAME.0/${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+	#rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/snapshots/$NAME.0/${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+	rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 	echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
 	rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 else
@@ -42,15 +43,16 @@ else
 		echo "Starting full sync..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-		rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/snapshots/$NAME.0/${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+		#rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/snapshots/$NAME.0/${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+		rsync -rltD --delete -e \""ssh -T -c arcfour -o Compression=no -x"\" "${SOURCE}/" "${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 		echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
 		rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 	else
 		echo "Syncing changed files only..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (CHANGES ONLY)-------" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-		rsync -rltD -e \""ssh -T -c arcfour -o Compression=no -x"\" --files-from="${FILESFROM}" / "${DEST}/$NAME/snapshots/$NAME.0"
+		#rsync -rltD -e \""ssh -T -c arcfour -o Compression=no -x"\" --files-from="${FILESFROM}" / "${DEST}/$NAME/snapshots/$NAME.0"
+		rsync -rltD -e \""ssh -T -c arcfour -o Compression=no -x"\" --files-from="${FILESFROM}" / "${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/"
+		rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 	fi
 fi
-
-rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes

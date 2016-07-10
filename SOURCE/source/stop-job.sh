@@ -24,15 +24,35 @@ source /opt/sbu/source/functions
 source /opt/sbu/source/header
 
 if [[ $(checkStatus $NAME) -gt 0 ]]; then
+
 	PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh ${SOURCE}")
-	if [[ "$PID1" > 0 ]]; then
-		kill $PID1
-	fi
 	PID2=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
+
+	if [[ "$PID1" > 0 ]]; then
+		PTREE=$(pstree -p $PID1)
+		PIDS=$(echo $PTREE | awk -vRS=")" -vFS="(" '{print $2}')
+		kill -SIGKILL $PIDS
+	fi
+
 	if [[ "$PID2" > 0 ]]; then
-		kill $PID2
+		PTREE=$(pstree -p $PID2)
+		PIDS=$(echo $PTREE | awk -vRS=")" -vFS="(" '{print $2}')
+		kill -SIGKILL $PIDS
+		
+		if [ -e /opt/sbu/jobs/$NAME/$NAME-searching ]; then
+			rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
+		fi
+		
+		if [ -e /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot ]; then
+			rm -rf /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
+		fi
+		
+		if [ -e /opt/sbu/jobs/$NAME/$NAME-syncing-changes ]; then
+			rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
+		fi
+		
 	fi
 	sbu --status $NAME
 else
 	echo "$NAME is already stopped"
-fi 
+fi

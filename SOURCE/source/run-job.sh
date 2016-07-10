@@ -31,6 +31,11 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 		echo "-------------Starting Initialized Backup-------------"
 		echo ""
 		
+		CURRINTERVAL=$INTERVAL
+		
+		# Need to check if /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot exists, if so snapshot was interrupted, need to start it over.
+		# Search for changes should fire off without having to check.
+		
 		# Update config variables to avoid having to restart for some changes:
 		/opt/sbu/source/check-config.sh	
 		
@@ -41,11 +46,8 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 		fi
 			
 		echo "Searching for changed files..."
-		echo ""
 				
 		# Fire off search in background:
-		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-searching
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - Searching for changes" >> /var/log/sbu/$NAME/sbulog
 		nohup /opt/sbu/source/search-for-changes.sh $NAME &>/dev/null &
 		
 		# This may need to be moved to a better place, checks if snapshots have expired and need to be rolled up:
@@ -66,8 +68,13 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 					sleep 1
 					if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
 						echo "Rotating backups..."
-						/opt/sbu/source/rotate-bu.sh $NAME
 						/opt/sbu/source/sync-changes.sh $NAME
+						/opt/sbu/source/rotate-bu.sh $NAME
+						# Fire off creating a new snapshot in background:
+						if [ ! -d "${DEST}/$NAME/tmp/.$NAME.snapshot" ]; then
+							echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
+							nohup /opt/sbu/source/create-snapshot.sh $NAME &>/dev/null &
+						fi
 					fi
 					break
 				fi
@@ -81,18 +88,17 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 			rm -rf "${DEST}/$NAME/snapshots/$NAME.0/timestamp"
 			echo $(date "+%Y-%m-%d %H:%M:%S") > "${DEST}/$NAME/snapshots/$NAME.0/timestamp"
 					
-			# Calculate number of minutes remaining in interval:
-					
+			# Calculate number of minutes remaining in interval:		
 			CURRTIME=$(date +"%D %T")
 			LASTFILESEARCH=$(tail -1 /opt/sbu/jobs/$NAME/$NAME-last-file-search)
 			MINUTES=$(( ( $(date -ud "$CURRTIME" +'%s') - $(date -ud "$LASTFILESEARCH" +'%s') )/60 ))
 			echo $MINUTES > "${DEST}/$NAME/snapshots/$NAME.0/snapshot-time"
-			NEWINTERVAL=$(($INTERVAL - $MINUTES))
+			NEWINTERVAL=$(($CURRINTERVAL - $MINUTES))
 			if [[ $NEWINTERVAL -lt 0 ]]
 			then
-				INTERVAL=0
+				CURRINTERVAL=0
 			else
-				INTERVAL=$NEWINTERVAL
+				CURRINTERVAL=$NEWINTERVAL
 			fi
 		
 		else
@@ -102,8 +108,9 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 				
 		echo "-------------Snapshot Check Complete-------------"
 		echo ""
-		echo "Sleeping for "$(($INTERVAL * 60))"..."
-		sleep $(($INTERVAL * 60))
+		echo "Sleeping for "$(($CURRINTERVAL * 60))"..."
+		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-going-to-sleep
+		sleep $(($CURRINTERVAL * 60))
 
 	done
 

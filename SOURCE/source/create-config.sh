@@ -24,7 +24,7 @@ SOURCE=$1
 DEST=$2
 NAME=$3
 INTERVAL=$4
-DAYSTOKEEP=$5
+RETENTION=$5
 AUTOSTART=$6
 
 # Create config file:
@@ -49,7 +49,7 @@ echo "Interval="$INTERVAL >> /opt/sbu/jobs/$NAME/$NAME.conf
 echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 
 echo "# Retention is the number of days to keep backup history, backups will be rolled into the full backup after this number of days, 30 days is the default." >> /opt/sbu/jobs/$NAME/$NAME.conf
-echo "Retention="$DAYSTOKEEP >> /opt/sbu/jobs/$NAME/$NAME.conf
+echo "Retention="$RETENTION >> /opt/sbu/jobs/$NAME/$NAME.conf
 echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 
 if [ -z "$AUTOSTART" ]; then

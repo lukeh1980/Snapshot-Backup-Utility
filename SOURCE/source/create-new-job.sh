@@ -24,7 +24,7 @@ SOURCE=$1
 DEST=$2
 NAME=$3
 INTERVAL=$4
-DAYSTOKEEP=$5
+RETENTION=$5
 AUTOSTART=$6
 MARG=1
 
@@ -55,7 +55,7 @@ if [ ! -d "/opt/sbu/jobs/$NAME" ]; then
 	# Create config file for new job:
 	echo "Creating config file for $NAME..."
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating config file for $NAME" >> /var/log/sbu/$NAME/sbulog
-	/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP $AUTOSTART $MARG
+	/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $RETENTION $AUTOSTART $MARG
 	
 	if [ ! -s "/opt/sbu/jobs/$NAME/$NAME.conf" ]; then
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: Could not create configuration file!" >> /var/log/sbu/$NAME/sbulog
@@ -91,13 +91,13 @@ fi
 echo "Setting snapshot policy to $INTERVAL minutes..."
 echo $(date "+%Y-%m-%d %H:%M:%S")" - Using a snapshot rotation of $INTERVAL minutes" >> /var/log/sbu/$NAME/sbulog
 
-if [ -z "$DAYSTOKEEP" ]; then
+if [ -z "$RETENTION" ]; then
 	echo "Using default retention of 30 days..."
-	DAYSTOKEEP=30
+	RETENTION=30
 fi
 
-echo "Setting retention policy to $DAYSTOKEEP days..."
-echo $(date "+%Y-%m-%d %H:%M:%S")" - Using retention policy of $DAYSTOKEEP days" >> /var/log/sbu/$NAME/sbulog
+echo "Setting retention policy to $RETENTION days..."
+echo $(date "+%Y-%m-%d %H:%M:%S")" - Using retention policy of $RETENTION days" >> /var/log/sbu/$NAME/sbulog
 
 echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-initializing
 INITIALIZED=0

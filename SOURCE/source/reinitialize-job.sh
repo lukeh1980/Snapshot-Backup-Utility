@@ -33,5 +33,5 @@ echo ""
 DELETEFILES=1
 nohup /opt/sbu/source/remove-job.sh $NAME $DELETEFILES &>/dev/null &
 sleep 1
-nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP on &>/dev/null &
+nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $RETENTION on &>/dev/null &
 sleep 1

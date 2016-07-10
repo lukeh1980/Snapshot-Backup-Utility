@@ -20,9 +20,14 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
+source /opt/sbu/source/functions
 source /opt/sbu/source/header
 
 DELFILES=$2
+
+if [[ $(checkStatus $NAME) -gt 0 ]]; then
+	/opt/sbu/sbu --stop $NAME
+fi
 
 echo ""
 echo "-------REMOVING $NAME BACKUP JOB-------"
@@ -45,17 +50,6 @@ if [ ! -d "/opt/sbu/jobs/$NAME" ]; then
 	exit
 else
 	rm -rf /opt/sbu/jobs/$NAME
-fi
-
-PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh ${SOURCE}")
-PID2=$(pgrep -f "/opt/sbu/source/run-job.sh ${NAME}")
-
-if [[ "$PID1" > 0 ]]; then
-	kill $PID1
-fi
-
-if [[ "$PID2" > 0 ]]; then
-	kill $PID2
 fi
 
 if [[ $DELFILES -eq 1 ]]; then

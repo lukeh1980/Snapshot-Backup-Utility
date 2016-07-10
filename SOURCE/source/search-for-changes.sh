@@ -22,8 +22,8 @@
 
 source /opt/sbu/source/header
 
-MINUTES=$(($INTERVAL))
-
+#MINUTES=$(($INTERVAL))
+echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-searching
 echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-last-file-search
 
 NEWSOURCE="${SOURCE}/"
@@ -31,29 +31,40 @@ NEWDEST="${DEST}/$NAME/snapshots/$NAME.0${SOURCE}/"
 FILEDEST="${DEST}/$NAME/tmp/$INTERVAL-min"
 
 if [ "$FULLSYNC" == "on" ]; then
-
+	echo "Starting Search"
 	nohup rsync -rltDn --delete --out-format="%f" "${NEWSOURCE}" "${NEWDEST}" > "${FILEDEST}" 2> /dev/null &
-	
 	while :
-	do
+	do	
+		echo "Top of Loop"
+		sleep 1
 		PID=$(pgrep -f "rsync -rltDn --delete --out-format="%f" ${NEWSOURCE} ${NEWDEST}")
+		echo $PID
 		if [[ "$PID" > 0 ]]; then
 			# If $FILEDEST has a size greater than 0 then a change was detected, kill the rsync search and go onto to doing a full sync:
+			echo "PID Greater than 0"
 			if [ -s "${FILEDEST}" ]; then
-				kill $PID3
+				echo "Killing "$PID
+				echo "-------"
+				/usr/bin/kill -SIGKILL $PID
+				sleep 1
+				PID=$(pgrep -f "rsync -rltDn --delete --out-format="%f" ${NEWSOURCE} ${NEWDEST}")
+				if [[ "$PID" > 0 ]]; then
+					echo "Killing again: "$PID
+					/usr/bin/kill -SIGKILL $PID
+				fi
+				echo "Removing Search"
 				rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
-				exit
+				break
 			fi
 		else
 			rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
-			exit
+			break
 		fi
-		sleep 1
 	done
 	
 else
+	echo "Full Sync Off"
 	rsync -rltDn --out-format="%f" "${NEWSOURCE}" "${NEWDEST}" > "${FILEDEST}"
 	grep -v "${SOURCE:1}/\." "${FILEDEST}" > "${FILEDEST}.tmp"; mv "${FILEDEST}.tmp" "${FILEDEST}"
-	#find "${FILEDEST}" -type f -print -exec cat {} \; | grep deleting > "${DEST}/$NAME/tmp/delete-check"
 	rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
 fi

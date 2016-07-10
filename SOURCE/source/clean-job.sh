@@ -20,17 +20,11 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
-NAME=$1
+source /opt/sbu/source/functions
+source /opt/sbu/source/header
 
-PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh $SOURCE")
-PID2=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
-
-if [[ "$PID1" > 0 ]]; then
-	kill $PID1
-fi
-
-if [[ "$PID2" > 0 ]]; then
-	kill $PID2
+if [[ $(checkStatus $NAME) -gt 0 ]]; then
+	/opt/sbu/sbu --stop $NAME
 fi
 
 rm -rf /var/log/sbu/$NAME

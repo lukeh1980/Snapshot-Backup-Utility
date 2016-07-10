@@ -53,7 +53,7 @@ do
 			fi
 			
 			if [[ $line == *"Retention"* ]]; then
-				DAYSTOKEEP=$(echo "$line" | cut -d '=' -f 2)
+				RETENTION=$(echo "$line" | cut -d '=' -f 2)
 			fi
 			
 			if [[ $line == *"Autostart"* ]]; then

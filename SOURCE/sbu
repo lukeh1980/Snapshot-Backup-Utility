@@ -33,7 +33,7 @@ while [ "$1" != "" ]; do
                                 STATUS=1
 								NAME=$1
                                 ;;
-		-f | --force-delete )   shift
+		-f | --force )   		shift
                                 FORCE=1
                                 ;;
 		--autostart )     		shift
@@ -78,12 +78,20 @@ while [ "$1" != "" ]; do
         -i | --interval )       shift
 								INTERVAL=$1
 								;;
+		--set-interval )   		shift
+								SETINTERVAL=1
+								NEWINTERVAL=$1
+								;;
+		--set-retention )   	shift
+								SETRETENTION=1
+								NEWRETENTION=$1
+								;;
 		-c | --create )			shift
 								NAME=$1
 								NEWJOB=1
 								;;
-		-k | --days-to-keep )	shift
-								DAYSTOKEEP=$1
+		-r | --retention )		shift
+								RETENTION=$1
 								;;
 		-h | --help )			shift
 								usage
@@ -202,6 +210,48 @@ if [[ $START -eq 1 ]]; then
 	exit
 fi
 
+if [[ $SETRETENTION -eq 1 ]]; then
+	if [ -z "$NAME" ]; then
+		echo "ERROR: Cannot set retention policy, please enter a job name."
+		exit
+	else
+		if [ -d "/opt/sbu/jobs/$NAME" ]; then
+			echo "Setting retention to $NEWRETENTION"
+			while read -r line
+			do
+				if [[ $line == *"Retention"* ]]; then
+					OLDRETENTION=$(echo "$line" | cut -d '=' -f 2)
+				fi
+			done < "/opt/sbu/jobs/$NAME/$NAME.conf"
+			sed -i -e 's/Retention='$OLDRETENTION'/Retention='$NEWRETENTION'/g' /opt/sbu/jobs/$NAME/$NAME.conf
+			exit
+		else
+			echo "$NAME job does not exist!"
+		fi
+	fi
+fi
+
+if [[ $SETINTERVAL -eq 1 ]]; then
+	if [ -z "$NAME" ]; then
+		echo "ERROR: Cannot set interval, please enter a job name."
+		exit
+	else
+		if [ -d "/opt/sbu/jobs/$NAME" ]; then
+			echo "Setting interval to $NEWINTERVAL"
+			while read -r line
+			do
+				if [[ $line == *"Interval"* ]]; then
+					OLDINTERVAL=$(echo "$line" | cut -d '=' -f 2)
+				fi
+			done < "/opt/sbu/jobs/$NAME/$NAME.conf"
+			sed -i -e 's/Interval='$OLDINTERVAL'/Interval='$NEWINTERVAL'/g' /opt/sbu/jobs/$NAME/$NAME.conf
+			exit
+		else
+			echo "$NAME job does not exist!"
+		fi
+	fi
+fi
+
 if [ "$AUTOSTART" == "on" ]; then
 	if [ -z "$NAME" ]; then
 		echo "ERROR: Cannot set autostart, please enter a job name."
@@ -209,7 +259,7 @@ if [ "$AUTOSTART" == "on" ]; then
 	else
 		if [ -d "/opt/sbu/jobs/$NAME" ]; then
 			echo "Setting $NAME autostart to on."
-			sed -i -e 's/Autostart=off/Autostart on/g' /opt/sbu/jobs/$NAME/$NAME.conf
+			sed -i -e 's/Autostart=off/Autostart=on/g' /opt/sbu/jobs/$NAME/$NAME.conf
 			grep -v "/opt/sbu/sbu --start $NAME" /opt/sbu/source/autostart.sh > /opt/sbu/source/autostart.tmp; mv /opt/sbu/source/autostart.tmp /opt/sbu/source/autostart.sh
 			echo "/opt/sbu/sbu --start $NAME" >> /opt/sbu/source/autostart.sh
 			chmod a+x /opt/sbu/source/*
@@ -227,7 +277,7 @@ if [ "$AUTOSTART" == "off" ]; then
 	else
 		if [ -d "/opt/sbu/jobs/$NAME" ]; then
 			echo "Setting $NAME autostart to off."
-			sed -i -e 's/Autostart=on/Autostart off/g' /opt/sbu/jobs/$NAME/$NAME.conf
+			sed -i -e 's/Autostart=on/Autostart=off/g' /opt/sbu/jobs/$NAME/$NAME.conf
 			grep -v "/opt/sbu/sbu --start $NAME" /opt/sbu/source/autostart.sh > /opt/sbu/source/autostart.tmp; mv /opt/sbu/source/autostart.tmp /opt/sbu/source/autostart.sh
 			chmod a+x /opt/sbu/source/*
 			exit
@@ -292,7 +342,7 @@ if [[ $NEWJOB -eq 1 ]]; then
 	fi
 	
 	# Passed minimum input checks, create job:
-	nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $DAYSTOKEEP on &>/dev/null &
+	nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $RETENTION on &>/dev/null &
 	sleep 1
 	
 	if [ -s "/var/log/sbu/$NAME-job-creation-error" ]; then

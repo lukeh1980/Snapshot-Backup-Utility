@@ -1,4 +1,4 @@
-Version 0.3.5
+Version 0.3.6
 
 SBU (Snapshot Backup Utility) makes an initial full copy to the /destination/backup-name/snapshots/backup-name.full directory.
 Snapshots are created by hard linking the previous snapshots to the next snapshot directory and then syncing any changed files from the previous interval.
@@ -13,24 +13,26 @@ sbu will try to restart the initialization over the next time the job starts.
 OPTIONS SUMMARY
 
 -c, --create		name of backup (should be unique to sbu jobs)
--s, --source			directory to be backed up	
--d, --destination		directory where backup snapshots are to be stored	
--i, --interval			interval in minutes that snapshots should be taken	
--k, --days-to-keep		number of days to keep snapshots before rolling into base snapshot
+-s, --source		directory to be backed up	
+-d, --destination	directory where backup snapshots are to be stored	
+-i, --interval		interval in minutes that snapshots should be taken	
+-r, --retention		number of days to keep snapshots before rolling into base snapshot
 
---status			displays status of backup jobs, optionally takes backup name as parameter (tip: use "watch sbu --status" to view status live)
---stop				stops backup job, will restart after reboot if autostart is on
---start				starts backup job that has been stopped
---restart			restarts backup job
---autostart			sets autostart to on or off, use --name option: sbu --autostart on --name my-backup-job
---full-sync			sets full sync on or off, use --name option: sbu --full-sync on --name my-backup-job
---remove			takes backup name as parameter and removes the backup job, will ask to delete backup files
---force-delete		forces delete of backup files without prompting
---reinit			reinitializes the backup job. WARNING: This command destructive, it will delete all previous backups and start over.			
+--status		displays status of backup jobs, optionally takes backup name as parameter (tip: use "watch sbu --status" to view status live)
+--stop			stops backup job, will restart after reboot if autostart is on
+--start			starts backup job that has been stopped
+--restart		restarts backup job
+--autostart		sets autostart to on or off, use --name option: sbu --autostart on --name my-backup-job
+--full-sync		sets full sync on or off, use --name option: sbu --full-sync on --name my-backup-job
+--set-interval		sets new interval, use --name option: sbu --set-interval 10 --name my-backup-job
+--set-retention		sets new retention policy, use --name option: sbu --set-retention 30 --name my-backup-job
+--remove		takes backup name as parameter and removes the backup job, will ask to delete backup files
+--force			forces delete of backup files without prompting
+--reinit		reinitializes the backup job. WARNING: This command destructive, it will delete all previous backups and start over.			
 
 USAGE EXAMPLE:
 
-	sbu --create my-backup --source /directory/to/backup --dest /destination/to/save/backups --interval 30 --days-to-keep 30
+	sbu --create my-backup --source /directory/to/backup --dest /destination/to/save/backups --interval 30 --retention 30
 
 USAGE NOTES: 
 
