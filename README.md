@@ -1,5 +1,5 @@
 # SBU (Snapshot Backup Utility)
-SBU is a linux command line utility for creating automated snapshots using hard links and rsync. It is written using only bash and rsync so it should run on most Linux distributions. You can have as many backup jobs running at different intervals as your system resources will allow. SBU can run on lightweight computers (It was developed on a Rasberry Pi 2) but large directory structures will require more resources.
+SBU is an easy to use linux command line utility for creating automated snapshots using hard links and rsync. It is written using only bash and rsync so it should run on most Linux distributions. You can have as many backup jobs running at different intervals as your system resources will allow. SBU can run on lightweight computers (It was developed on a Rasberry Pi 2) but large directory structures will require more processing power.
 
 Due to the use of hard links SBU requires the destination file system to be Linux based but not the source directory. There is no GUI interface but there are plans for a web interface in the future. Encryption of destination directories are also planned for a future release.
 
