@@ -22,17 +22,17 @@ Run install-sbu.sh:
 		
 	./install-sbu.sh
 
-SBU will prompt you to skip or install rsync. If you select y it will attempt to check for a redhat release and if not use apt-get to install rsync. If you get an error you can re run the install script without installing rsync and install it on your own. You will need to have rsync installed before using SBU.
+SBU will prompt you to skip or install rsync version 3.1.2, keep in mind SBU will not work without rsync 3.1.2 installed. If you select y it will download rsync from samba.org and install it for you, if you select n it will continue the install without installing rsync but you will have to install it on your own to use SBU.
 
 # USAGE EXAMPLE
-You can read full instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, to create a job type: 
+You can read full usage instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, to create a job type: 
 	
 	sbu --create job-name --source /my/source/directory --dest /my/backup/directory --interval 30 --retention 30
 
 NOTE: --interval is in minutes and --retention is in days.
 
 This will create a new directory for snapshots in /my/backup/directory/job-name/snapshots.
-The initial full sync is named job-name.full, subsequent snapshots are named job-name.0, job-name.1, job-name.2, etc. The newest snapshot is always job-name.0, as snapshots reach the --days-to-keep limit they will be rolled into job-name.full. Each snapshot has a timestamp file and a snapshot-time file with the number of minutes the snapshot took to create.
+The initial full sync is named job-name.full, subsequent snapshots are named job-name.0, job-name.1, job-name.2, etc. The newest snapshot is always job-name.0, as snapshots reach the --retention limit they will be rolled into job-name.full. Each snapshot has a timestamp file and a snapshot-time file with the number of minutes the snapshot took to create.
 
 # RESTORE SNAPSHOTS
 Restoration tools are planned in the future but for now you can simply copy files from a snapshot directory to restore from SBU backups.
@@ -48,7 +48,7 @@ Set full sync option (default is on):
 
 	sbu --full-sync on/off --name job-name
 		
-You can also make changes to the config file for each job. Config files are located at /opt/sbu/jobs/job-name/job-name.conf. WARNING: This may have unpredictable results, use with caution. You should be able to change the Interval and Retention (days to keep) settings on running jobs, settings will take affect on the next interval. Changing source and destination directories will result in backup failures, a new job should be created to change these.
+You can also make changes to the config file for each job. Config files are located at /opt/sbu/jobs/job-name/job-name.conf. WARNING: This may have unpredictable results, use with caution. You should be able to change the Interval and Retention (days to keep) settings on running jobs, some settings will take affect on the next interval but you may need to restart the job for all settings to take effect. Changing source and destination directories will result in backup failures, a new job should be created to change these.
 
 # REMOVING JOBS
 You can remove jobs using (it will prompt to delete backup files): 
@@ -88,3 +88,14 @@ By default any job you create will automatically start at bootup, you can turn t
 
 # FULL SYNC MODE
 By default FullSync is set to on. If this is turned off snapshot time may be decreased but SBU will not delete files that have been deleted at the source until the first snapshot done after midnight. This may not be desirable if it's important that deleted files are not restored in the event of a recovery. Deleted files will only be retained for a maximum of 1 day when FullSync is off, when FullSync is on deleted files at the source will be reflected in the next snapshot.
+
+# SETTING PERMISSIONS
+By default SBU will attempt to copy permissions from source to destination but you can set the permissions and ownership of backup files when creating jobs:
+
+	--set-perms xxxx (e.g. --set-perms 0755)
+	--set-owner ownername
+	--set-group groupname
+	
+If you do not want SBU to do anything with file permissions (i.e. inherit permissions from destination filesystem settings) you can use "--set-perms no-perms" option when creating the job. You can also edit the config file and change the permissions to "no-perms" and it will not make any changes to permissions or ownership of files when transferring.
+
+NOTE: If you are using an NFS share as a backup location you must use no_root_squash directive when exporting the share or SBU will not be able to change permissions.
