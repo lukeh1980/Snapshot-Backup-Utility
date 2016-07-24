@@ -1,3 +1,7 @@
+# SBU 0.4.2 Bug Fixes & Improvements
+- Fixed bug that falsely reports changes when permissions are set to copy.
+- improved rsync options array so whitespace will not generate errors.
+
 # SBU 0.4.1 Bug Fixes & Improvements
 - SBU now requires rsync 3.1.2 or higher to be installed.
 - You can now set permissions of backups.
