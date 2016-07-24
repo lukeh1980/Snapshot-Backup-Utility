@@ -86,9 +86,6 @@ By default any job you create will automatically start at bootup, you can turn t
 
 	sbu --autostart off --name job-name
 
-# FULL SYNC MODE
-By default FullSync is set to on. If this is turned off snapshot time may be decreased but SBU will not delete files that have been deleted at the source until the first snapshot done after midnight. This may not be desirable if it's important that deleted files are not restored in the event of a recovery. Deleted files will only be retained for a maximum of 1 day when FullSync is off, when FullSync is on deleted files at the source will be reflected in the next snapshot.
-
 # SETTING PERMISSIONS
 By default SBU will attempt to copy permissions from source to destination but you can set the permissions and ownership of backup files when creating jobs:
 
