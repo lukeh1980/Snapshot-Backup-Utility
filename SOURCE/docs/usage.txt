@@ -21,6 +21,7 @@ OPTIONS USED WHEN CREATING JOBS
 --set-perms		takes numerical chmod permissions (e.g. 0755)
 --set-owner		sets owner of target files/directories.
 --set-group		sets group of target files/directories.
+--exclude-file		use file with directories to exclude, by default a file will be create in the jobs folder.
 
 OPTIONS USED TO MANAGE JOBS
 --status		displays status of backup jobs, optionally takes backup name as parameter (tip: use "watch sbu --status" to view status live)
