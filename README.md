@@ -43,10 +43,6 @@ You can reconfigure some features of a running job, more are planned in the futu
 Set autostart (default is on):
 	
 	sbu --autostart on/off --name job-name
-	
-Set full sync option (default is on):
-
-	sbu --full-sync on/off --name job-name
 		
 You can also make changes to the config file for each job. Config files are located at /opt/sbu/jobs/job-name/job-name.conf. WARNING: This may have unpredictable results, use with caution. You should be able to change the Interval and Retention (days to keep) settings on running jobs, some settings will take affect on the next interval but you may need to restart the job for all settings to take effect. Changing source and destination directories will result in backup failures, a new job should be created to change these.
 
