@@ -3,4 +3,5 @@
 
 # ENHANCEMENTS
 - Logging should be reworked to combine all jobs into one file.
+- Log rotation should be implemented.
 - Ability to create job groups in order to manage large sets of jobs.
