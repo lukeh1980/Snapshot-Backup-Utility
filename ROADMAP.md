@@ -11,3 +11,4 @@
 - Add upgrade feature.
 - Add --soft feature to wait until a job is idle before stopping or restarting.
 - Ability to create job groups in order to manage large sets of jobs.
+- Add stop/start/restart all jobs feature.
