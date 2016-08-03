@@ -3,7 +3,8 @@
 - snapshot-time is not reported correctly.
 - Testing snapshots older than the retention policy has not been done, need to keep at least one snapshot.
 - Jobs fail to reinitialize when interrupted.
-- Jobs may get "stuck" on syncing or creating a snapshot if interrupted when not idle.
+- Jobs may get stuck on syncing or creating a snapshot if interrupted when not idle.
+- "sbu --status job-name" does not show the status of single jobs only "sbu --status" shows status of all jobs.
 
 # ENHANCEMENTS
 - Logging may be reworked ouput sync errors into one file for easier troubleshooting. 
