@@ -27,6 +27,15 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 	if [ -s /opt/sbu/jobs/$NAME/$NAME-first-run-tasks.sh ]; then
 		/opt/sbu/jobs/$NAME/$NAME-first-run-tasks.sh $NAME
 	fi
+	if [ -e /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot ]; then
+		rm -rf /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
+	fi
+	if [ -e /opt/sbu/jobs/$NAME/$NAME-searching ]; then
+		rm -rf /opt/sbu/jobs/$NAME/$NAME-searching
+	fi
+	if [ -e /opt/sbu/jobs/$NAME/$NAME-syncing-changes ]; then
+		rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
+	fi
 	
 	while :
 	do	
@@ -122,5 +131,5 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 
 else 
 # REINITIALIZE BACKUP (if initialization did not finish last time job was started it will be reinitialized):
-/opt/sbu/source/reinitialize-job.sh $NAME
+nohup /opt/sbu/source/reinitialize-job.sh $NAME &>/dev/null &
 fi
