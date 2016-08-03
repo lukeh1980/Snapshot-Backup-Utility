@@ -22,6 +22,16 @@
 
 source /opt/sbu/source/header
 
+NEWSOURCE=$SOURCE
+NEWDEST=$DEST
+NEWNAME=$NAME
+NEWINTERVAL=$INTERVAL
+NEWRETENTION=$RETENTION
+NEWSETPERMS=$SETPERMS
+NEWSETOWNER=$SETOWNER
+NEWSETGROUP=$SETGROUP
+NEWEXCLUDEFILE=$EXCLUDEFILE
+
 echo ""
 echo "--------STARTING BACKUP INITIALIZATION--------"
 echo ""
@@ -30,8 +40,7 @@ echo $(date "+%Y-%m-%d %H:%M:%S")" - Re-Initializing $NAME" >> /var/log/sbu/$NAM
 echo "Re-Initializing $NAME..."
 echo ""
 
-DELETEFILES=1
-nohup /opt/sbu/source/remove-job.sh $NAME $DELETEFILES &>/dev/null &
+/opt/sbu/sbu --remove $NAME --force
 sleep 1
-nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $RETENTION on &>/dev/null &
-sleep 1
+
+/opt/sbu/sbu --create $NEWNAME --source "${NEWSOURCE}" --dest "${NEWDEST}" --interval $NEWINTERVAL --retention $NEWRETENTION --set-perms $NEWSETPERMS --set-owner $NEWSETOWNER --set-group $NEWSETGROUP --exclude-file $NEWEXCLUDEFILE
