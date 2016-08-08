@@ -31,7 +31,7 @@ NEWDEST="${DEST}/$NAME/snapshots/$NAME.0${SOURCE}/"
 FILEDEST="${DEST}/$NAME/tmp/$INTERVAL-min"
 
 if [ "$FULLSYNC" == "on" ]; then
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting Search: rsync ${OPTS[@]} --delete --out-format=%f ${NEWSOURCE} ${NEWDEST} > ${FILEDEST}" >> /var/log/sbu/$NAME/sbulog
+	#echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting Search: rsync ${OPTS[@]} --delete --out-format=%f ${NEWSOURCE} ${NEWDEST} > ${FILEDEST}" >> /var/log/sbu/$NAME/sbulog
 	echo "Starting Search..."
 	RSYNCSTARTED=0
 	nohup /usr/local/bin/rsync "${OPTS[@]}" --delete --out-format="%f" "${NEWSOURCE}" "${NEWDEST}" > "${FILEDEST}" 2>> /var/log/sbu/$NAME/sbulog &
