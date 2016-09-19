@@ -5,6 +5,7 @@
 
 # SBU 0.4.3 Bug Fixes & Improvements
 - Added status checks to each task branch to prevent tasks from running over the top of each other.
+- Added upgrade script for upgrading existing/running versions.
 
 # SBU 0.4.2 Bug Fixes & Improvements
 - Fixed bug that falsely reports changes when permissions are set to copy.
