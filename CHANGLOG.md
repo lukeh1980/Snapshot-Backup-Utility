@@ -1,3 +1,11 @@
+# SBU 0.4.4 Bug Fixes & Improvements
+- Added better status reporting, will now show mutliple statuses for each job if the job is running multiple tasks.
+- Improved snapshot information, will now log snapshot time, sync time, and full rotation time for each snapshot.
+- Improved upgrade script to auto-restart jobs when they are idle (if the upgrade requires it).
+
+# SBU 0.4.3 Bug Fixes & Improvements
+- Added status checks to each task branch to prevent tasks from running over the top of each other.
+
 # SBU 0.4.2 Bug Fixes & Improvements
 - Fixed bug that falsely reports changes when permissions are set to copy.
 - improved rsync options array so whitespace will not generate errors.
