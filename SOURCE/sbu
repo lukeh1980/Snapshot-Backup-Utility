@@ -23,7 +23,7 @@
 source /opt/sbu/source/functions
 
 # Initialize variables:
-REMOVE=0; CLEAN=0; STOP=0; START=0; RESTART=0; FORCE=0; NEWJOB=0; SETPERMS="copy"; SETGROUP="copy"; SETOWNER="copy"; NOPERMS=0; EXCLUDE=0
+REMOVE=0; CLEAN=0; STOP=0; START=0; RESTART=0; FORCE=0; SOFT=0; NEWJOB=0; SETPERMS="copy"; SETGROUP="copy"; SETOWNER="copy"; NOPERMS=0; EXCLUDE=0
 
 # First get all input from sbu:
 
@@ -56,6 +56,9 @@ while [ "$1" != "" ]; do
 		--restart )     		shift
                                 RESTART=1
 								NAME=$1
+                                ;;
+		--soft )     			shift
+                                SOFT=1
                                 ;;
         --remove )     			shift
                                 REMOVE=1
@@ -248,7 +251,20 @@ if [[ $STOP -eq 1 ]]; then
 		echo "ERROR: Can't stop job, please enter a job name."
 		exit
 	fi
-	/opt/sbu/source/stop-job.sh $NAME
+	if [[ $SOFT -eq 0 ]]; then
+		/opt/sbu/source/stop-job.sh $NAME
+	else
+		while :
+		do
+			CURRSTATUS=$(/opt/sbu/source/get-status.sh $NAME)
+			if [ "$CURRSTATUS" == "$NAME idle" ]; then
+				/opt/sbu/source/stop-job.sh $NAME
+				exit
+			else
+				sleep 1
+			fi
+		done
+	fi
 	exit
 fi
 

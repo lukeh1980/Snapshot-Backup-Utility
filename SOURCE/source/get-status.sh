@@ -47,7 +47,7 @@ else
 		# Job exists:
 		if [[ $(checkStatus $NAME) -gt 0 ]]; then
 			
-			printf $(getCurrentStatus $NAME)
+			echo $(getCurrentStatus $NAME)
 			
 		else
 			echo "$NAME is stopped"

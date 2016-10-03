@@ -27,7 +27,9 @@ echo "-------------Starting Rotate-BU Script-------------"
 echo ""
 
 if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
-
+	
+	CHECKSTARTTIME=$(date +"%D %T")
+	
 	INCREMENT=()
 	DIR="${DEST}/$NAME/snapshots/"
 
@@ -50,14 +52,25 @@ if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
 			#echo $(date "+%Y-%m-%d %H:%M:%S")" - Moving $DIR$NAME.$INCREMENT to $DIR$NAME.$((INCREMENT+1))" >> /var/log/sbu/$NAME/sbulog
 			mv "${DIR}$NAME.$INCREMENT" "${DIR}$NAME.$((INCREMENT+1))"
 			#echo $(date "+%Y-%m-%d %H:%M:%S")" - Moving $DEST/$NAME/tmp/.$NAME.snapshot to $DIR$NAME.$INCREMENT" >> /var/log/sbu/$NAME/sbulog
-			mv "${DEST}/$NAME/tmp/.$NAME.snapshot" "${DIR}$NAME.$INCREMENT"
+			mv "${DEST}/$NAME/tmp/$NAME.0" "${DIR}$NAME.$INCREMENT"
+			
+			echo "Updating timestamp in latest snapshot..."
+			rm -rf "${DEST}/$NAME/snapshots/$NAME.0/timestamp"
+			#echo $(date "+%Y-%m-%d %H:%M:%S") > "${DEST}/$NAME/snapshots/$NAME.0/timestamp-"$(date +"%Y%m%d%H%M%S")
+			echo $(date "+%Y-%m-%d %H:%M:%S") > "${DEST}/$NAME/snapshots/$NAME.0/timestamp"
+			
 			let "INCREMENT--"
 		fi
 		
 	done
 
 	rm -rf "${DEST}/$NAME/tmp/$NAME-dir-list"
-
+	
+	CHECKENDTIME=$(date +"%D %T")
+	CHECKMINUTES=$(( ( $(date -ud "$CHECKENDTIME" +'%s') - $(date -ud "$CHECKSTARTTIME" +'%s') )/60 ))
+	#rm -rf "${DEST}/$NAME/snapshots/$NAME.0/rotation-time-*"
+	#echo $CHECKMINUTES > ${DEST}/$NAME/snapshots/$NAME.0/rotation-time-$(date +"%Y%m%d%H%M%S")-$CHECKMINUTES
+						
 	echo ""
 	echo "-------------END Rotate-BU Script-------------"
 	echo ""

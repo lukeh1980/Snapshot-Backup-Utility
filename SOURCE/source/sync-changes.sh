@@ -32,31 +32,48 @@ FILESFROM="${DEST}/$NAME/tmp/$INTERVAL-min"
 if [[ $NUMDAYS -gt 0 ]]; then
 	echo "Starting full sync..."
 	echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --delete ${SOURCE}/ ${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
+	echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --delete ${SOURCE}/ ${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
 	echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-	/usr/local/bin/rsync "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+	/usr/local/bin/rsync "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 	
 	echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
+	
+	SYNCENDTIME=$(date +"%D %T")
+	SYNCMINUTES=$(( ( $(date -ud "$SYNCENDTIME" +'%s') - $(date -ud "$CURRTIME" +'%s') )/60 ))
+	rm -rf "${DEST}/$NAME/tmp/$NAME.0/sync-time"
+	echo $SYNCMINUTES > "${DEST}/$NAME/tmp/$NAME.0/sync-time"
+	
 	rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 else
 	if [ "$FULLSYNC" == "on" ]; then
 		# If full sync is on then the $FILESFROM will only be a partial list of changes since it's not used.
 		echo "Starting full sync..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --delete ${SOURCE}/ ${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --delete ${SOURCE}/ ${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 		
-		/usr/local/bin/rsync "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+		/usr/local/bin/rsync "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 		
 		echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
+		
+		SYNCENDTIME=$(date +"%D %T")
+		SYNCMINUTES=$(( ( $(date -ud "$SYNCENDTIME" +'%s') - $(date -ud "$CURRTIME" +'%s') )/60 ))
+		rm -rf "${DEST}/$NAME/tmp/$NAME.0/sync-time"
+		echo $SYNCMINUTES > "${DEST}/$NAME/tmp/$NAME.0/sync-time"
+		
 		rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 	else
 		echo "Syncing changed files only..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (CHANGES ONLY)-------" >> /var/log/sbu/$NAME/sbulog
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --files-from="${FILESFROM}" / ${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --files-from="${FILESFROM}" / ${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 		
-		/usr/local/bin/rsync "${OPTS[@]}" --files-from="${FILESFROM}" / "${DEST}/$NAME/tmp/.$NAME.snapshot${SOURCE}/"
+		/usr/local/bin/rsync "${OPTS[@]}" --files-from="${FILESFROM}" / "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/"
+		
+		SYNCENDTIME=$(date +"%D %T")
+		SYNCMINUTES=$(( ( $(date -ud "$SYNCENDTIME" +'%s') - $(date -ud "$CURRTIME" +'%s') )/60 ))
+		rm -rf "${DEST}/$NAME/tmp/$NAME.0/sync-time"
+		echo $SYNCMINUTES > "${DEST}/$NAME/tmp/$NAME.0/sync-time"
 		
 		rm -rf /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 	fi

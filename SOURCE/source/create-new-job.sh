@@ -124,6 +124,7 @@ then
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - Adding $NAME to autostart" >> /var/log/sbu/$NAME/sbulog
 		grep -v "/opt/sbu/sbu --start $NAME" /opt/sbu/source/autostart.sh > /opt/sbu/source/autostart.tmp; mv /opt/sbu/source/autostart.tmp /opt/sbu/source/autostart.sh
 		echo "/opt/sbu/sbu --start $NAME" >> /opt/sbu/source/autostart.sh
+		#echo "sleep 1" >> /opt/sbu/source/autostart.sh
 		chmod a+x /opt/sbu/source/*
 	fi
 	

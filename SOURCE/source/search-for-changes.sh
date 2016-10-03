@@ -30,6 +30,12 @@ NEWSOURCE="${SOURCE}/"
 NEWDEST="${DEST}/$NAME/snapshots/$NAME.0${SOURCE}/"
 FILEDEST="${DEST}/$NAME/tmp/$INTERVAL-min"
 
+echo $NEWSOURCE
+echo $NEWDEST
+echo $FILEDEST
+
+echo "${OPTS[@]}"
+
 if [ "$FULLSYNC" == "on" ]; then
 	#echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting Search: rsync ${OPTS[@]} --delete --out-format=%f ${NEWSOURCE} ${NEWDEST} > ${FILEDEST}" >> /var/log/sbu/$NAME/sbulog
 	echo "Starting Search..."

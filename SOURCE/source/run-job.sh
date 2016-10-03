@@ -51,19 +51,27 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 		# Need to check if /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot exists, if so snapshot was interrupted, need to start it over.
 		# Search for changes should fire off without having to check.
 		
-		# Fire off creating a new snapshot in background:
-		if [ ! -d "${DEST}/$NAME/tmp/.$NAME.snapshot" ]; then
-			echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
-			nohup /opt/sbu/source/create-snapshot.sh $NAME &>/dev/null &
-		fi
-			
+		# Start Check Time:
+		CHECKSTARTTIME=$(date +"%D %T")
 		# This may need to be moved to a better place, checks if snapshots have expired and need to be rolled up:
-		nohup /opt/sbu/source/snapshot-rollup.sh $NAME &>/dev/null &
+		if [ ! -s /opt/sbu/jobs/$NAME/$NAME-rolling-up-backup ]; then
+			nohup /opt/sbu/source/snapshot-rollup.sh $NAME &>/dev/null &
+		fi
+		
+		# Fire off creating a new snapshot in background:
+		if [ ! -d "${DEST}/$NAME/tmp/$NAME.0" ]; then
+			if [ ! -s /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot ]; then
+				nohup /opt/sbu/source/create-snapshot.sh $NAME &>/dev/null &
+				sleep 1
+			fi
+		fi
 				
 		# Fire off search in background:
-		nohup /opt/sbu/source/search-for-changes.sh $NAME &>/dev/null &
-		# Adding a sleep here allows the search-for-changes.sh file to create the nessisary files and start searching before it goes on checking below, removing this may make it miss searches.
-		sleep 1
+		if [ ! -s /opt/sbu/jobs/$NAME/$NAME-searching ]; then
+			nohup /opt/sbu/source/search-for-changes.sh $NAME &>/dev/null &
+			# Adding a sleep here allows the search-for-changes.sh file to create the nessisary files and start searching before it goes on checking below, removing this may make it miss searches.
+			sleep 1
+		fi
 		
 		# Wait for file search and snapshot to complete then rotate if changes have been found:
 		while :
@@ -80,12 +88,22 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 					echo "${DEST}/$NAME/tmp/$INTERVAL-min"
 					if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
 						echo "Syncing Changes..."
+						
 						/opt/sbu/source/sync-changes.sh $NAME
 						/opt/sbu/source/rotate-bu.sh $NAME
+						
+						CHECKENDTIME=$(date +"%D %T")
+						CHECKMINUTES=$(( ( $(date -ud "$CHECKENDTIME" +'%s') - $(date -ud "$CHECKSTARTTIME" +'%s') )/60 ))
+						rm -rf "${DEST}/$NAME/snapshots/$NAME.0/last-rotation-time"
+						#echo $CHECKMINUTES > ${DEST}/$NAME/snapshots/$NAME.0/full-check-time-$(date +"%Y%m%d%H%M%S")-$CHECKMINUTES
+						echo $CHECKMINUTES > ${DEST}/$NAME/snapshots/$NAME.0/last-rotation-time
+						
 						# Fire off creating a new snapshot in background:
-						if [ ! -d "${DEST}/$NAME/tmp/.$NAME.snapshot" ]; then
-							echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
-							nohup /opt/sbu/source/create-snapshot.sh $NAME &>/dev/null &
+						if [ ! -d "${DEST}/$NAME/tmp/$NAME.0" ]; then
+							if [ ! -s /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot ]; then
+								nohup /opt/sbu/source/create-snapshot.sh $NAME &>/dev/null &
+								sleep 1
+							fi
 						fi
 						break
 					else
@@ -95,19 +113,15 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 			fi
 		done
 		
-		# Check if changes have been found and sync them:
+		# Calculate remaining time until next check:
 		if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
-			echo "Will delete interval search file..."
-			rm -rf "${DEST}/$NAME/tmp/$INTERVAL-min"		
-			echo "Updating timestamp in latest snapshot..."
-			rm -rf "${DEST}/$NAME/snapshots/$NAME.0/timestamp"
-			echo $(date "+%Y-%m-%d %H:%M:%S") > "${DEST}/$NAME/snapshots/$NAME.0/timestamp"
-					
+			
+			echo "Changes needed to be synced so remove $INTERVAL-min file and calculate remaining sleep time..."
+			rm -rf "${DEST}/$NAME/tmp/$INTERVAL-min"
 			# Calculate number of minutes remaining in interval:		
 			CURRTIME=$(date +"%D %T")
 			LASTFILESEARCH=$(tail -1 /opt/sbu/jobs/$NAME/$NAME-last-file-search)
 			MINUTES=$(( ( $(date -ud "$CURRTIME" +'%s') - $(date -ud "$LASTFILESEARCH" +'%s') )/60 ))
-			echo $MINUTES > "${DEST}/$NAME/snapshots/$NAME.0/snapshot-time"
 			NEWINTERVAL=$(($CURRINTERVAL - $MINUTES))
 			if [[ $NEWINTERVAL -lt 0 ]]
 			then

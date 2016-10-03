@@ -62,6 +62,7 @@ function getCurrentStatus {
 	
 	NAME=$1
 	PID=0
+	TOTALSTATUS=""
 	
 	if [ -e "/opt/sbu/jobs/$NAME/$NAME.conf" ]; then
 
@@ -88,37 +89,65 @@ function getCurrentStatus {
 		
 	if [[ "$PID1" > 0 || "$PID2" > 0 ]]; then
 		
-		STATUS="idle"
+		STATUS="- idle"
+		
+		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-rolling-up-backup" ]]; then
+			STATUS1="rolling up backup"
+		fi
+		
+		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-rotating-backup" ]]; then
+			STATUS2="rotating backup"
+		fi
 		
 		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-initializing" ]]; then
-			STATUS="initializing"
+			STATUS3="initializing"
 		fi
 	
 		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot" ]]; then
-			STATUS="currently taking snapshot"
+			STATUS4="currently taking snapshot"
 		fi
 	
 		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-searching" ]]; then
-			STATUS="searching for changes"
-		fi
-	
-		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-rotating-backup" ]]; then
-			STATUS="rotating backup"
+			STATUS5="searching for changes"
 		fi
 	
 		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-syncing-changes" ]]; then
-			STATUS="syncing changes"
-		fi
-	
-		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-generating-index" ]]; then
-			STATUS="indexing"
+			STATUS6="syncing changes"
 		fi
 		
 	else
 		STATUS="is not running!"
 	fi
 	
-	echo $NAME $STATUS
+	if [[ ! -z "$STATUS1" ]]; then
+		TOTALSTATUS=$TOTALSTATUS" - "$STATUS1
+	fi
+	
+	if [[ ! -z "$STATUS2" ]]; then
+		TOTALSTATUS=$TOTALSTATUS" - "$STATUS2
+	fi
+	
+	if [[ ! -z "$STATUS3" ]]; then
+		TOTALSTATUS=$TOTALSTATUS" - "$STATUS3
+	fi
+	
+	if [[ ! -z "$STATUS4" ]]; then
+		TOTALSTATUS=$TOTALSTATUS" - "$STATUS4
+	fi
+	
+	if [[ ! -z "$STATUS5" ]]; then
+		TOTALSTATUS=$TOTALSTATUS" - "$STATUS5
+	fi
+	
+	if [[ ! -z "$STATUS6" ]]; then
+		TOTALSTATUS=$TOTALSTATUS" - "$STATUS6
+	fi
+	
+	if [[ ! -z "$TOTALSTATUS" ]]; then
+		echo $NAME $TOTALSTATUS
+	else
+		echo $NAME $STATUS
+	fi
 	
 }
 

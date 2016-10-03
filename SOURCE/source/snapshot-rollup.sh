@@ -24,48 +24,63 @@ source /opt/sbu/source/header
 
 INCREMENT=()
 DIR="${DEST}/$NAME/snapshots/"
+CURRTIME=$(date +"%D %T")
+
+# THIS NEEDS TO BE CHANGED TO A LOOP THAT RUNS AT MIDNIGHT EACH NIGHT.
 
 cd "${DIR}"
 echo ""
 echo "------STARTING SNAPSHOT ROLLUP-----"
-ls -v | grep -v '\.full$' | grep -v 'full-backup.index' | grep -v 'timestamp-full-backup' > "${DEST}/$NAME/tmp/$NAME-dir-list-rollup"
-INCREMENT=$(tail -n 1 "${DEST}/$NAME/tmp/$NAME-dir-list-rollup" | cut -d '.' -f 2)
+ls -v | grep -v '\.0$' | grep -v '\.full$' | grep -v 'full-backup.index' | grep -v 'timestamp-full-backup' > "${DEST}/$NAME/tmp/$NAME-dir-list-rollup"
 
-#echo "Getting timestamp of last snapshot..."
-TIMESTAMP=$(tail -1 "${DIR}$NAME.$INCREMENT/timestamp")
-NOW=$(date "+%Y-%m-%d %H:%M:%S")
+if [ -s "${DEST}/$NAME/tmp/$NAME-dir-list-rollup" ]; then
 
-# Get seconds of timestamp and now:
-TIMESTAMP=$(date -d "$TIMESTAMP" +"%s")
-NOW=$(date -d "$NOW" +"%s")
+	INCREMENT=$(tail -n 1 "${DEST}/$NAME/tmp/$NAME-dir-list-rollup" | cut -d '.' -f 2)
 
-DIFF="$((NOW - TIMESTAMP))"
+	#echo "Getting timestamp of last snapshot..."
+	TIMESTAMP=$(tail -1 "${DIR}$NAME.$INCREMENT/timestamp")
+	NOW=$(date "+%Y-%m-%d %H:%M:%S")
 
-RETENTION=$((86400 * $RETENTION))
+	# Get seconds of timestamp and now:
+	TIMESTAMP=$(date -d "$TIMESTAMP" +"%s")
+	NOW=$(date -d "$NOW" +"%s")
 
-if [ $DIFF -gt $RETENTION ]; then
+	DIFF="$((NOW - TIMESTAMP))"
 
-	echo "Rolling up backup..."
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - Rolling up backup: rsync -rltD ${DIR}$NAME.$INCREMENT/ ${DIR}$NAME.full/" >> /var/log/sbu/$NAME/sbulog
-	rsync -rltD "${DIR}$NAME.$INCREMENT/" "${DIR}$NAME.full/" 2>> /var/log/sbu/$NAME/sbulog
-	
-	#mv "${DIR}$NAME.full/timestamp" "${DIR}$NAME.full/timestamp-full-backup"
-	mv "${DIR}$NAME.$INCREMENT" "${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting"
-	rm -rf "${DIR}$NAME.full/snapshot-time"
+	RETENTION=$((86400 * $RETENTION))
+
+	if [ $DIFF -gt $RETENTION ]; then
+
+		echo "Rolling up backup..."
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - Rolling up backup: rsync -rltD ${DIR}$NAME.$INCREMENT/ ${DIR}$NAME.full/" >> /var/log/sbu/$NAME/sbulog
+		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-rolling-up-backup
+		/usr/local/bin/rsync -rltD "${DIR}$NAME.$INCREMENT/" "${DIR}$NAME.full/" 2>> /var/log/sbu/$NAME/sbulog
 		
-	# create delete queue file:
-	echo "#!/bin/bash" > /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
-	echo "if [ ! -d \"${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting\" ]; then" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
-	echo "rm -rf /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
-	echo "else" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
-	echo "nohup rm -rf \"${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting\" &>/dev/null &" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
-	echo "fi" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+		#mv "${DIR}$NAME.full/timestamp" "${DIR}$NAME.full/timestamp-full-backup"
+		mv "${DIR}$NAME.$INCREMENT" "${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting" 2>> /var/log/sbu/$NAME/sbulog
+		rm -rf "${DIR}$NAME.full/snapshot-time"
+			
+		# create delete queue file:
+		echo "#!/bin/bash" > /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+		echo "if [ ! -d \"${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting\" ]; then" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+		echo "rm -rf /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+		echo "else" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+		echo "nohup rm -rf \"${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting\" &>/dev/null &" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+		echo "fi" >> /opt/sbu/delqueue/$NAME.$INCREMENT-snapshot-delfiles.sh
+			
+		chmod a+x /opt/sbu/delqueue/*
+			
+		# fire off delete command:
+		nohup rm -rf "${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting" &>/dev/null &
 		
-	chmod a+x /opt/sbu/delqueue/*
+		ROLLUPENDTIME=$(date +"%D %T")
+		ROLLUPMINUTES=$(( ( $(date -ud "$ROLLUPENDTIME" +'%s') - $(date -ud "$CURRTIME" +'%s') )/60 ))
+		rm -rf "/opt/sbu/jobs/$NAME/$NAME-last-rollup-time"
+		echo $ROLLUPMINUTES > "/opt/sbu/jobs/$NAME/$NAME-last-rollup-time"
 		
-	# fire off delete command:
-	nohup rm -rf "${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting" &>/dev/null &
-	
+		rm -rf /opt/sbu/jobs/$NAME/$NAME-rolling-up-backup
+		
+	fi
 fi
 
 rm -rf "${DEST}/$NAME/tmp/$NAME-dir-list-rollup"
