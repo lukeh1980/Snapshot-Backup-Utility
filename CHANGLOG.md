@@ -1,3 +1,7 @@
+# SBU 0.4.5 Installation Bug Fixes & Added Compatibility with SystemD Unit Files
+- Installation script now detects CentOS/RHEL 6/7 and Ubuntu 16/17 distributions and installs all required dependencies. 
+- Installation script creates unit file for SystemD on CentOS/RHEL 7 or Ubuntu 16/17 servers, no need to do it manually.
+- Manual installation instructions for other distributions were added to INSTALL.txt.
 # SBU 0.4.4 Bug Fixes & Improvements
 - Added better status reporting, will now show mutliple statuses for each job if the job is running multiple tasks.
 - Improved snapshot information, will now log snapshot time, sync time, and full rotation time for each snapshot.
