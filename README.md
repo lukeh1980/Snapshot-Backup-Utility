@@ -25,6 +25,8 @@ Run install-sbu.sh:
 NOTE: 
 The install-sbu.sh script will check for all packages that are needed to complete the installation and if any are missing they will be installed. The system package manager will be used for all packages with the exception of rsync version 3.1.2, SBU cannot run without this version of rsync installed and it needs to be built from source. The installation script will download and build this version of rsync from this location: https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz.
 
+Manual installation instructions are available in INSTALL.txt.
+
 # USAGE EXAMPLE
 You can read usage instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, for example to create a job type: 
 	
