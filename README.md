@@ -1,10 +1,10 @@
-# SBU (Snapshot Backup Utility) 0.4.4
-SBU is an easy to use Linux command line utility designed to create automated snapshots using only bash scripting and rsync 3.1.2 or greater allowing it to run on most Linux distributions. You can have as many backup jobs running at different intervals as your system resources will allow. SBU can run on lightweight computers (It was developed on a Rasberry Pi 2) but large directory structures will require more processing power to take frequent snapshots.
+# SBU (Snapshot Backup Utility) 0.4.5
+SBU is an easy to use Linux command line utility designed to create automated snapshots using only bash scripting and rsync 3.1.2 or greater allowing it to run on most Linux distributions. You can have as many backup jobs running at different intervals as your system resources will allow. SBU can run on lightweight computers (It was developed on a Rasberry Pi 2 just for kicks) but large directory structures will require more processing power to take frequent snapshots.
 
 Due to the use of hard links SBU requires the destination file system to be Linux based but not the source directory. There is no GUI interface but there are plans for a web interface and API in the future. Encryption of destination directories are also planned for a future release.
 
 # INSTALLATION
-Follow these steps to install SBU:
+The below steps are the easiest way to install SBU, it has been tested on CentOS/RHEL 6/7 and Ubuntu Server 16/17.
 
 Download the tar file named sbu-x.x.x-install.tar and extract it on your Linux system:
 	
@@ -14,20 +14,19 @@ Change directory to extracted folder:
 
 	cd sbu-x.x.x
 	
-You will find 3 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh. CHMOD install/uninstall scripts to be executable:
+You will find 4 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh and upgrade-sbu.sh. These scripts must have the executable bit set:
 	
-	chmod +x install-sbu.sh uninstall-sbu.sh
+	chmod +x install-sbu.sh
 
 Run install-sbu.sh:
 		
 	./install-sbu.sh
 
-SBU will prompt you to skip or install rsync version 3.1.2, keep in mind SBU will not work without rsync 3.1.2 installed. If you select y it will download rsync from samba.org and install it for you, if you select n it will continue the install without installing rsync but you will have to install it on your own to use SBU.
-
-NOTE: If you have an older version of rsync installed from another repository you must remove this version before installing version 3.1.2 or it may not work properly.
+NOTE: 
+The install-sbu.sh script will check for all packages that are needed to complete the installation and if any are missing they will be installed. The system package manager will be used for all packages with the exception of rsync version 3.1.2, SBU cannot run without this version of rsync installed and it needs to be built from source. The installation script will download and build this version of rsync from this location: https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz.
 
 # USAGE EXAMPLE
-You can read full usage instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, to create a job type: 
+You can read usage instructions by typing "sbu --help" at the command prompt. Usage is meant to be simple and straight forward, for example to create a job type: 
 	
 	sbu --create job-name --source /my/source/directory --dest /my/backup/directory --interval 30 --retention 30
 
