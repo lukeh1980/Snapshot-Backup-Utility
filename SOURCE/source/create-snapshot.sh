@@ -26,11 +26,11 @@ if [ ! -s "/opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot" ]; then
 
 	echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
 	echo "Snapshot started at: " $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-last-snapshot-start-time
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating snapshot: cp -rpl ${DEST}/$NAME/snapshots/$NAME.0 ${DEST}/$NAME/tmp/" >> /var/log/sbu/$NAME/sbulog
+	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating snapshot: cp -rpld ${DEST}/$NAME/snapshots/$NAME.0 ${DEST}/$NAME/tmp/" >> /var/log/sbu/$NAME/sbulog
 
 	if [ ! -d "${DEST}/$NAME/tmp/$NAME.0" ]; then
 		STARTTIME=$(date +"%D %T")
-		cp -rpl "${DEST}/$NAME/snapshots/$NAME.0" "${DEST}/$NAME/tmp/" 2>> /var/log/sbu/$NAME/sbulog
+		cp -rpld "${DEST}/$NAME/snapshots/$NAME.0" "${DEST}/$NAME/tmp/" 2>> /var/log/sbu/$NAME/sbulog
 		rm -rf "${DEST}/$NAME/tmp/$NAME.0/snapshot-time"
 		ENDTIME=$(date +"%D %T")
 		#sleep 1

@@ -4,7 +4,7 @@ SBU is an easy to use Linux command line utility designed to create automated sn
 Due to the use of hard links SBU requires the destination file system to be Linux based but not the source directory. There is no GUI interface but there are plans for a web interface and API in the future. Encryption of destination directories are also planned for a future release.
 
 # INSTALLATION
-The below steps are the easiest way to install SBU, it has been tested on CentOS/RHEL 6/7 and Ubuntu Server 16/17.
+The below steps are the easiest way to install SBU on a current Linux distribution that uses apt (Debian/Ubuntu), dnf/yum (RHEL/Rocky/AlmaLinux/Fedora), zypper (SUSE) or pacman (Arch). The distribution must ship rsync 3.1.2 or later.
 
 Download the tar file named sbu-x.x.x-install.tar and extract it on your Linux system:
 	
@@ -23,7 +23,7 @@ Run install-sbu.sh:
 	./install-sbu.sh
 
 NOTE: 
-The install-sbu.sh script will check for all packages that are needed to complete the installation and if any are missing they will be installed. The system package manager will be used for all packages with the exception of rsync version 3.1.2, SBU cannot run without this version of rsync installed and it needs to be built from source. The installation script will download and build this version of rsync from this location: https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz.
+The install-sbu.sh script will check for all packages that are needed to complete the installation and if any are missing they will be installed with the system package manager, including rsync. SBU needs rsync 3.1.2 or later, which current Linux distributions ship; rsync is no longer built from source.
 
 Manual installation instructions are available in INSTALL.txt.
 

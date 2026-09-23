@@ -20,60 +20,11 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
-if [ -e "/opt/sbu/jobs/$1/$1.conf" ]; then
+# load_job_config lives in functions; most callers source it already.
+declare -F load_job_config >/dev/null || source /opt/sbu/source/functions
 
-	FILE="/opt/sbu/jobs/$1/$1.conf"
-	
-	while read -r line
-	do
-		[[ $line = \#* ]] && continue
-		
-		if [[ $line == *"Name="* ]]; then
-			NAME=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"Source="* ]]; then
-			SOURCE=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"Dest="* ]]; then
-			DEST=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"Interval="* ]]; then
-			INTERVAL=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"Retention="* ]]; then
-			RETENTION=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"Autostart="* ]]; then
-			AUTOSTART=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"FullSync="* ]]; then
-			FULLSYNC=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"DestPerms="* ]]; then
-			SETPERMS=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"DestOwner="* ]]; then
-			SETOWNER=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"DestGroup="* ]]; then
-			SETGROUP=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-		if [[ $line == *"ExcludeFile="* ]]; then
-			EXCLUDEFILE=$(echo "$line" | cut -d '=' -f 2)
-		fi
-		
-	done < "$FILE"
-	
+if load_job_config "$1"; then
+
 	OPTS=( "-rdltD" )
 
 	# GET PERMISSION SETTINGS:
@@ -108,7 +59,6 @@ if [ -e "/opt/sbu/jobs/$1/$1.conf" ]; then
 	
 	#OPTS+=( "--delete" )
 
-else 
+else
 	echo "$1 backup job does not exist!"
-	#exit
 fi

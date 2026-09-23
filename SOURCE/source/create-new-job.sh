@@ -20,6 +20,8 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
+source /opt/sbu/source/functions
+
 SOURCE=$1
 DEST=$2
 NAME=$3
@@ -62,7 +64,7 @@ if [ ! -d "/opt/sbu/jobs/$NAME" ]; then
 	# Create config file for new job:
 	echo "Creating config file for $NAME..."
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Creating config file for $NAME" >> /var/log/sbu/$NAME/sbulog
-	/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $RETENTION $AUTOSTART $SETPERMS $SETOWNER $SETGROUP $EXCLUDEFILE
+	/opt/sbu/source/create-config.sh "${SOURCE}" "${DEST}" "$NAME" "$INTERVAL" "$RETENTION" "$AUTOSTART" "$SETPERMS" "$SETOWNER" "$SETGROUP" "$EXCLUDEFILE"
 	
 	if [ ! -s "/opt/sbu/jobs/$NAME/$NAME.conf" ]; then
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - ERROR: Could not create configuration file!" >> /var/log/sbu/$NAME/sbulog
@@ -204,8 +206,8 @@ then
 	
 	#OPTS+=( "--delete" )
 	
-	echo $(date "+%Y-%m-%d %H:%M:%S")" - rsync $OPTIONS $EXCLUDE ${SOURCE}/ ${FULLDEST}${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
-	/usr/local/bin/rsync "${OPTS[@]}" "${SOURCE}/" "${FULLDEST}${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+	echo $(date "+%Y-%m-%d %H:%M:%S")" - rsync ${OPTS[*]} ${SOURCE}/ ${FULLDEST}${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
+	"$RSYNC_BIN" "${OPTS[@]}" "${SOURCE}/" "${FULLDEST}${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 	echo "Setting timestamp of full backup..."
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Setting timestamp of full backup" >> /var/log/sbu/$NAME/sbulog
 	echo $(date "+%Y-%m-%d %H:%M:%S") > "${FULLDEST}/timestamp"
@@ -222,7 +224,7 @@ then
 	cd "${FULLDEST}"
 	echo "Copying hard links of full backup into first iteration..."
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Copying hard links of full backup into first iteration" >> /var/log/sbu/$NAME/sbulog
-	cp -rlp ./ "${DEST}/$NAME/snapshots/$NAME.0/"
+	cp -rlpd ./ "${DEST}/$NAME/snapshots/$NAME.0/"
 	
 	# We log the timestamp of the new snapshot after it is complete:
 	echo "Setting snapshot timestamp..."

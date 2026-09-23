@@ -20,6 +20,7 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
+source /opt/sbu/source/functions
 source /opt/sbu/source/header
 
 INCREMENT=()
@@ -54,7 +55,7 @@ if [ -s "${DEST}/$NAME/tmp/$NAME-dir-list-rollup" ]; then
 		echo "Rolling up backup..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - Rolling up backup: rsync -rltD ${DIR}$NAME.$INCREMENT/ ${DIR}$NAME.full/" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-rolling-up-backup
-		/usr/local/bin/rsync -rltD "${DIR}$NAME.$INCREMENT/" "${DIR}$NAME.full/" 2>> /var/log/sbu/$NAME/sbulog
+		"$RSYNC_BIN" -rltD "${DIR}$NAME.$INCREMENT/" "${DIR}$NAME.full/" 2>> /var/log/sbu/$NAME/sbulog
 		
 		#mv "${DIR}$NAME.full/timestamp" "${DIR}$NAME.full/timestamp-full-backup"
 		mv "${DIR}$NAME.$INCREMENT" "${DEST}/$NAME/tmp/.$NAME.$INCREMENT.deleting" 2>> /var/log/sbu/$NAME/sbulog

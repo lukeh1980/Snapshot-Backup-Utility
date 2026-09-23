@@ -26,7 +26,7 @@ clear
 echo "-------------Starting Rotate-BU Script-------------"
 echo ""
 
-if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
+if [ -s "${DEST}/$NAME/tmp/$NAME-changes" ]; then
 	
 	CHECKSTARTTIME=$(date +"%D %T")
 	

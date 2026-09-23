@@ -1,6 +1,8 @@
 # AUTO INSTALLATION VIA INSTALL-SBU.SH
 
-***This installation script should be ran on a fresh install of Linux, SBU has been tested on CentOS/RHEL 6/7 and Ubuntu Server 16/17.***
+***This installation script should be ran on a fresh install of Linux. It works on current distributions that use apt (Debian/Ubuntu), dnf or yum (RHEL/Rocky/AlmaLinux/Fedora), zypper (SUSE) or pacman (Arch).***
+
+To upgrade an existing installation (0.4.5 or later) do not run install-sbu.sh, run upgrade-sbu.sh instead (see UPGRADING below).
 
 Follow these steps to install SBU using the install-sbu.sh script:
 
@@ -13,38 +15,42 @@ Follow these steps to install SBU using the install-sbu.sh script:
 
     cd sbu-x.x.x
 
-(3) You will find 4 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh, and upgrade-sbu.sh (upgrade-sbu.sh is experimental, it may not work properly). CHMOD scripts to be executable:
+(3) You will find 4 files: sbu-x.x.x.tar, install-sbu.sh, uninstall-sbu.sh, and upgrade-sbu.sh. CHMOD scripts to be executable:
 
     chmod +x ./*.sh
 	
-(4) Run install-sbu.sh:
+(4) Run install-sbu.sh as root:
 
-    ./install-sbu.sh
+    sudo ./install-sbu.sh
 
-NOTE: install-sbu.sh will check for all packages that are needed and if they are not installed it will install them. 
-The system package manager will be used for all packages with the exception of rsync version 3.1.2, SBU cannot run without this version of rsync installed.
-The installation script will download and build this version of rsync from samba.
+NOTE: install-sbu.sh installs rsync from your distribution's package manager if it is not already installed.
+SBU needs rsync 3.1.2 or later, which every current distribution ships; the installer stops with an error if the distribution's rsync is older.
+rsync is no longer downloaded and built from source.
 
-WARNING: If you already have an older rsync package installed via a package manager installing rsync 3.1.2 with this script may
-cause a conflict.
+# UPGRADING
+
+Run upgrade-sbu.sh as root from the extracted folder. It waits for each running job to be idle, stops it, backs up /opt/sbu, installs the new version and restarts the jobs:
+
+    sudo ./upgrade-sbu.sh --check     (preflight only, changes nothing)
+    sudo ./upgrade-sbu.sh
+
+Existing backups, job configs and job state are not modified. Older SBU installers compiled rsync 3.1.2 into /usr/local/bin; the upgrade installs the distribution's rsync
+and renames the compiled one to /usr/local/bin/rsync.sbu-retired so SBU uses the distribution's rsync (use --keep-source-rsync to keep using the compiled one).
+To go back to the previous version run: sudo ./upgrade-sbu.sh --rollback
 
 # MANUAL INSTALLATION
 
-NOTE: This assumes a fresh install of CentOS/RHEL 6/7 or Ubuntu 16/17. This also assumes you know how to complete the tasks below without explanation.
+NOTE: This assumes a fresh install of a current Linux distribution. This also assumes you know how to complete the tasks below without explanation.
 If you are uncomfortable with the below steps please use the install-sbu.sh script as it accomplishes the same tasks.
 
 (1) Install Dependencies:
 
-	SBU requires these packages to be installed:
+	SBU requires these packages to be installed from your distribution's package manager:
 
-	gcc (required for rsync installation)
-	make (required for rsync installation)
-	perl (required for rsync installation)
-	psmisc (required for SBU)
+	rsync (version 3.1.2 or later)
+	procps / procps-ng (provides pgrep and pkill)
 	
-	Next you will need to download and install rsync 3.1.2 from https://download.samba.org/pub/rsync/src/rsync-3.1.2.tar.gz
-
-	After successfully installing the above packages as well as rsync 3.1.2 you are then ready to proceed with the SBU installation.
+	After successfully installing the above packages you are then ready to proceed with the SBU installation.
 
 (2) Install SBU:
 
@@ -61,11 +67,11 @@ If you are uncomfortable with the below steps please use the install-sbu.sh scri
   
   Make all files in /opt/sbu/source executable as well as the /opt/sbu file.
 	
-	If using CentOS/RHEL 6 then you will need to add this line to /etc/rc.local and make sure it's executable (it should run with sudo privileges or as root):
+	If your system does not use systemd then you will need to add this line to /etc/rc.local and make sure it's executable (it should run with sudo privileges or as root):
 		
 		/bin/bash /opt/sbu/source/autostart.sh
 		
-	If you are using Ubuntu 16/17 or CentOS/RHEL 7 then you will need to create a Unit file for systemd, an example for sbu.service is below:
+	If your system uses systemd then you will need to create a Unit file for systemd, an example for sbu.service is below:
 		
 		[Unit]
 		Description = SBU

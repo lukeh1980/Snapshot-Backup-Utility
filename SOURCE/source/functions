@@ -20,35 +20,92 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
+# require_binary NAME VAR
+#
+# Locate NAME in PATH and store its absolute path in the variable named VAR.
+# SBU's external tools are hard dependencies: if one is missing there is
+# nothing useful the utility can do, so fail loudly at load time rather than
+# at the first use with a confusing "no such file or directory".
+function require_binary {
+	local name="$1" var="$2" path
+	path=$(command -v "$name" 2>/dev/null) || {
+		echo "ERROR: $name not found in PATH. Install $name and try again." >&2
+		exit 1
+	}
+	printf -v "$var" '%s' "$path"
+}
+
+require_binary rsync RSYNC_BIN
+
+# load_job_config JOB
+#
+# Read JOB's config file and populate, from the job's config file:
+#   NAME SOURCE DEST INTERVAL RETENTION AUTOSTART FULLSYNC
+#   SETPERMS SETOWNER SETGROUP EXCLUDEFILE
+# A key is matched only at the start of a line, and the value is everything
+# after the first "=", so values may themselves contain "=" (symbolic chmod
+# specs and paths, for example).
+# Returns 1 if the config file does not exist.
+function load_job_config {
+	local conf="/opt/sbu/jobs/$1/$1.conf" line
+
+	[ -e "$conf" ] || return 1
+
+	while read -r line
+	do
+		case "$line" in
+			\#*)           continue ;;
+			Name=*)        NAME="${line#*=}" ;;
+			Source=*)      SOURCE="${line#*=}" ;;
+			Dest=*)        DEST="${line#*=}" ;;
+			Interval=*)    INTERVAL="${line#*=}" ;;
+			Retention=*)   RETENTION="${line#*=}" ;;
+			Autostart=*)   AUTOSTART="${line#*=}" ;;
+			FullSync=*)    FULLSYNC="${line#*=}" ;;
+			DestPerms=*)   SETPERMS="${line#*=}" ;;
+			DestOwner=*)   SETOWNER="${line#*=}" ;;
+			DestGroup=*)   SETGROUP="${line#*=}" ;;
+			ExcludeFile=*) EXCLUDEFILE="${line#*=}" ;;
+		esac
+	done < "$conf"
+}
+
+# set_config_value FILE KEY VALUE
+#
+# Replace KEY's value in FILE, matching the key only at the start of a line.
+# The file is rewritten to a temporary file in the same directory and moved
+# into place, so an interrupted edit cannot leave a truncated config behind.
+# VALUE is passed through the environment rather than awk -v so that it is
+# treated as a literal string, not as a regex or an escape sequence.
+# Returns 1 if the file is missing or the rewrite fails.
+function set_config_value {
+	local file="$1" key="$2" value="$3" tmpfile
+
+	[ -e "$file" ] || return 1
+
+	tmpfile=$(mktemp "${file}.XXXXXX") || return 1
+
+	SBU_CFG_VALUE="$value" awk -v key="$key" '
+		BEGIN { value = ENVIRON["SBU_CFG_VALUE"] }
+		index($0, key "=") == 1 { print key "=" value; next }
+		{ print }
+	' "$file" > "$tmpfile" || { rm -f "$tmpfile"; return 1; }
+
+	chmod --reference="$file" "$tmpfile" 2>/dev/null
+	mv "$tmpfile" "$file"
+}
+
 function checkStatus {
 	
 	NAME=$1
-	PID=0
 	STATUS=0
 	
-	if [ -e "/opt/sbu/jobs/$NAME/$NAME.conf" ]; then
-
-		FILE="/opt/sbu/jobs/$NAME/$NAME.conf"
-	
-		while read -r line
-		do
-			[[ $line = \#* ]] && continue
-		
-			if [[ $line == *"Source"* ]]; then
-				SOURCE=$(echo "$line" | cut -d '=' -f 2)
-			fi
-		
-		done < "$FILE"
-
-	#else 
-	#	echo $STATUS
-	#	exit
-	fi
+	load_job_config "$NAME"
 	
 	PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh ${SOURCE}")
 	PID2=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
 
-	if [[ "$PID1" > 0 || "$PID2" > 0 ]]; then
+	if [[ -n "$PID1" || -n "$PID2" ]]; then
 		STATUS=1
 	else
 		STATUS=0
@@ -61,42 +118,19 @@ function checkStatus {
 function getCurrentStatus {
 	
 	NAME=$1
-	PID=0
 	TOTALSTATUS=""
 	
-	if [ -e "/opt/sbu/jobs/$NAME/$NAME.conf" ]; then
-
-		FILE="/opt/sbu/jobs/$NAME/$NAME.conf"
-	
-		while read -r line
-		do
-			[[ $line = \#* ]] && continue
-		
-			if [[ $line == *"Source"* ]]; then
-				SOURCE=$(echo "$line" | cut -d '=' -f 2)
-			fi
-		
-		done < "$FILE"
-
-	else 
-		echo "Could not get $NAME config!"
-		#STATUS="$NAME does not exist!"
-		#exit
-	fi
+	load_job_config "$NAME" || echo "Could not get $NAME config!"
 	
 	PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh ${SOURCE}")
 	PID2=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
 		
-	if [[ "$PID1" > 0 || "$PID2" > 0 ]]; then
+	if [[ -n "$PID1" || -n "$PID2" ]]; then
 		
 		STATUS="- idle"
 		
 		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-rolling-up-backup" ]]; then
 			STATUS1="rolling up backup"
-		fi
-		
-		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-rotating-backup" ]]; then
-			STATUS2="rotating backup"
 		fi
 		
 		if [[ -e "/opt/sbu/jobs/$NAME/$NAME-initializing" ]]; then
@@ -121,10 +155,6 @@ function getCurrentStatus {
 	
 	if [[ ! -z "$STATUS1" ]]; then
 		TOTALSTATUS=$TOTALSTATUS" - "$STATUS1
-	fi
-	
-	if [[ ! -z "$STATUS2" ]]; then
-		TOTALSTATUS=$TOTALSTATUS" - "$STATUS2
 	fi
 	
 	if [[ ! -z "$STATUS3" ]]; then
@@ -153,5 +183,9 @@ function getCurrentStatus {
 
 function usage {	
 	clear
-	less /opt/sbu/docs/usage.txt
+	if command -v less >/dev/null 2>&1; then
+		less /opt/sbu/docs/usage.txt
+	else
+		cat /opt/sbu/docs/usage.txt
+	fi
 }

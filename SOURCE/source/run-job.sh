@@ -24,9 +24,6 @@ source /opt/sbu/source/header
 
 if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 
-	if [ -s /opt/sbu/jobs/$NAME/$NAME-first-run-tasks.sh ]; then
-		/opt/sbu/jobs/$NAME/$NAME-first-run-tasks.sh $NAME
-	fi
 	if [ -e /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot ]; then
 		rm -rf /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot
 	fi
@@ -43,9 +40,6 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 		echo ""
 		echo "-------------Starting Initialized Backup-------------"
 		echo ""
-		# Load config:
-		#source /opt/sbu/source/load-config.sh $NAME
-		
 		CURRINTERVAL=$INTERVAL
 		
 		# Need to check if /opt/sbu/jobs/$NAME/$NAME-currently-taking-snapshot exists, if so snapshot was interrupted, need to start it over.
@@ -85,8 +79,8 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 					sleep .5
 				else
 					echo "Done searching and taking snapshot.."
-					echo "${DEST}/$NAME/tmp/$INTERVAL-min"
-					if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
+					echo "${DEST}/$NAME/tmp/$NAME-changes"
+					if [ -s "${DEST}/$NAME/tmp/$NAME-changes" ]; then
 						echo "Syncing Changes..."
 						
 						/opt/sbu/source/sync-changes.sh $NAME
@@ -114,10 +108,10 @@ if [ ! -s /opt/sbu/jobs/$NAME/$NAME-initializing ]; then
 		done
 		
 		# Calculate remaining time until next check:
-		if [ -s "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
+		if [ -s "${DEST}/$NAME/tmp/$NAME-changes" ]; then
 			
-			echo "Changes needed to be synced so remove $INTERVAL-min file and calculate remaining sleep time..."
-			rm -rf "${DEST}/$NAME/tmp/$INTERVAL-min"
+			echo "Changes needed to be synced so remove the change list and calculate remaining sleep time..."
+			rm -rf "${DEST}/$NAME/tmp/$NAME-changes"
 			# Calculate number of minutes remaining in interval:		
 			CURRTIME=$(date +"%D %T")
 			LASTFILESEARCH=$(tail -1 /opt/sbu/jobs/$NAME/$NAME-last-file-search)

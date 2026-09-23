@@ -23,24 +23,50 @@
 source /opt/sbu/source/functions
 source /opt/sbu/source/header
 
+# The job name is the argument, not the config's Name= value, so a job whose config
+# is already gone can still be stopped.
+NAME=$1
+
+# kill_tree PID
+#
+# Signal PID and every descendant. Each process is frozen before its children
+# are collected so it cannot start new ones mid-walk. Killing only direct
+# children left the rsync started by sync-changes.sh / search-for-changes.sh
+# running after "stopped", still writing into the snapshot being built.
+# SIGTERM lets rsync remove its temporary files before it exits.
+function kill_tree {
+	local pid=$1 child
+	kill -STOP "$pid" 2>/dev/null
+	for child in $(pgrep -P "$pid"); do
+		kill_tree "$child"
+	done
+	kill -TERM "$pid" 2>/dev/null
+	kill -CONT "$pid" 2>/dev/null
+}
+
 if [[ $(checkStatus $NAME) -gt 0 ]]; then
 
-	PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh ${SOURCE}")
-	PID2=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
+	# Anchored so that stopping job "web" can never match job "web2".
+	PID1=$(pgrep -f "/opt/sbu/source/create-new-job.sh ${SOURCE} ")
+	PID2=$(pgrep -f "/opt/sbu/source/run-job.sh ${NAME}\$")
 
-	if [[ "$PID1" > 0 ]]; then
-		PTREE=$(pstree -p $PID1)
-		PIDS=$(echo $PTREE | awk -vRS=")" -vFS="(" '{print $2}')
-		kill -SIGKILL $PIDS
-	fi
+	for PID in $PID1; do
+		kill_tree "$PID"
+	done
 
-	if [[ "$PID2" > 0 ]]; then
-		PTREE=$(pstree -p $PID2)
-		PIDS=$(echo $PTREE | awk -vRS=")" -vFS="(" '{print $2}')
-		kill -SIGKILL $PIDS
+	if [[ -n "$PID2" ]]; then
+		for PID in $PID2; do
+			kill_tree "$PID"
+		done
+
+		# Let the tree exit before clearing its state files.
+		for i in 1 2 3 4 5 6 7 8 9 10; do
+			pgrep -f "/opt/sbu/source/run-job.sh ${NAME}\$" >/dev/null || break
+			sleep 0.5
+		done
 		
-		if [ -e "${DEST}/$NAME/tmp/$INTERVAL-min" ]; then
-			rm -rf "${DEST}/$NAME/tmp/$INTERVAL-min"
+		if [ -e "${DEST}/$NAME/tmp/$NAME-changes" ]; then
+			rm -rf "${DEST}/$NAME/tmp/$NAME-changes"
 		fi
 		
 		if [ -e /opt/sbu/jobs/$NAME/$NAME-searching ]; then
@@ -56,7 +82,7 @@ if [[ $(checkStatus $NAME) -gt 0 ]]; then
 		fi
 		
 	fi
-	sbu --status $NAME
+	/opt/sbu/sbu --status "$NAME"
 else
 	echo "$NAME is already stopped"
 fi

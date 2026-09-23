@@ -1,4 +1,4 @@
-Version 0.4.5 (as of 0.4.1 SBU requires rsync version 3.1.2 or later.)
+Version 0.5.0 (SBU requires rsync version 3.1.2 or later.)
 
 SBU (Snapshot Backup Utility) makes an initial full copy to the /destination/backup-name/snapshots/backup-name.full directory.
 Snapshots are created by hard linking the previous snapshots to the next snapshot directory and then syncing any changed files from the previous interval.
@@ -14,7 +14,7 @@ OPTIONS USED WHEN CREATING JOBS
 
 -c, --create		name of backup (should be unique to sbu jobs)
 -s, --source		directory to be backed up	
--d, --destination	directory where backup snapshots are to be stored	
+-d, --dest		directory where backup snapshots are to be stored	
 -i, --interval		interval in minutes that snapshots should be taken	
 -r, --retention		number of days to keep snapshots before rolling into base snapshot
 --no-perms		no rsync flags for permissions will be set (-rltD essentially).
@@ -24,12 +24,15 @@ OPTIONS USED WHEN CREATING JOBS
 --exclude-file		use file with directories to exclude, by default a file will be create in the jobs folder.
 
 OPTIONS USED TO MANAGE JOBS
+-n, --name		name of the backup job for --autostart, --full-sync, --set-interval and --set-retention
 --status		displays status of backup jobs, optionally takes backup name as parameter (tip: use "watch sbu --status" to view status live)
 --stop			stops backup job, will restart after reboot if autostart is on
 --start			starts backup job that has been stopped
 --restart		restarts backup job
 --autostart		sets autostart to on or off, use --name option: sbu --autostart on --name my-backup-job
 --full-sync		sets full sync on or off, use --name option: sbu --full-sync on --name my-backup-job
+--show-config		takes backup name as parameter and displays its configuration
+--clean			takes backup name as parameter and removes the job configuration and logs (backup files are kept)
 --remove		takes backup name as parameter and removes the backup job, will ask to delete backup files
 --force			forces delete of backup files without prompting
 --reinit		reinitializes the backup job. WARNING: This command destructive, it will delete all previous backups and start over

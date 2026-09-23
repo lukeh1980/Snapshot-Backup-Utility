@@ -20,13 +20,14 @@
 # along with SBU (located in /opt/sbu/docs/COPYING).  If not, see <http://www.gnu.org/licenses/>.
 #################################################################################################
 
+source /opt/sbu/source/functions
 source /opt/sbu/source/header
 
 # To help speed up snapshots it only syncs changed files leaving deleted files intact, once a day we do another rsync to clean out delete files from new snapshot:
 CURRTIME=$(date +"%D %T")
 LASTFULL=$(tail -1 /opt/sbu/jobs/$NAME/$NAME-last-full-sync)
 NUMDAYS=$(( ( $(date -ud "$CURRTIME" +'%s') - $(date -ud "$LASTFULL" +'%s') )/60/60/24 ))
-FILESFROM="${DEST}/$NAME/tmp/$INTERVAL-min"
+FILESFROM="${DEST}/$NAME/tmp/$NAME-changes"
 
 # Do a full sync (removes deleted files) if one day has passed since last full sync:
 if [[ $NUMDAYS -gt 0 ]]; then
@@ -34,7 +35,7 @@ if [[ $NUMDAYS -gt 0 ]]; then
 	echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (DELETE FLAG)-------" >> /var/log/sbu/$NAME/sbulog
 	echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --delete ${SOURCE}/ ${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
 	echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
-	/usr/local/bin/rsync "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+	"$RSYNC_BIN" "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 	
 	echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
 	
@@ -52,7 +53,7 @@ else
 		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --delete ${SOURCE}/ ${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 		
-		/usr/local/bin/rsync "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
+		"$RSYNC_BIN" "${OPTS[@]}" --delete "${SOURCE}/" "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" 2>> /var/log/sbu/$NAME/sbulog
 		
 		echo $(date +"%D") 00:00:00 > /opt/sbu/jobs/$NAME/$NAME-last-full-sync
 		
@@ -65,10 +66,14 @@ else
 	else
 		echo "Syncing changed files only..."
 		echo $(date "+%Y-%m-%d %H:%M:%S")" -------STARTING RSYNC (CHANGES ONLY)-------" >> /var/log/sbu/$NAME/sbulog
-		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --files-from="${FILESFROM}" / ${DEST}/$NAME/tmp/$NAME.0${SOURCE}/" >> /var/log/sbu/$NAME/sbulog
+		echo $(date "+%Y-%m-%d %H:%M:%S")" - Starting full sync: rsync ${OPTS[@]} --files-from="${FILESFROM}" / ${DEST}/$NAME/tmp/$NAME.0/" >> /var/log/sbu/$NAME/sbulog
 		echo $(date "+%Y-%m-%d %H:%M:%S") > /opt/sbu/jobs/$NAME/$NAME-syncing-changes
 		
-		/usr/local/bin/rsync "${OPTS[@]}" --files-from="${FILESFROM}" / "${DEST}/$NAME/tmp/$NAME.0${SOURCE}/"
+		# The change list holds paths relative to / (e.g. srv/data/job/file), so the
+		# destination is the snapshot root. Appending ${SOURCE} here nested every
+		# change under a second copy of the source path and the real files were
+		# never updated until the nightly full sync.
+		"$RSYNC_BIN" "${OPTS[@]}" --files-from="${FILESFROM}" / "${DEST}/$NAME/tmp/$NAME.0/"
 		
 		SYNCENDTIME=$(date +"%D %T")
 		SYNCMINUTES=$(( ( $(date -ud "$SYNCENDTIME" +'%s') - $(date -ud "$CURRTIME" +'%s') )/60 ))

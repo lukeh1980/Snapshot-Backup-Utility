@@ -36,7 +36,7 @@ echo "#### SNAPSHOT BACKUP UTILITY ####" > /opt/sbu/jobs/$NAME/$NAME.conf
 echo "#################################" >> /opt/sbu/jobs/$NAME/$NAME.conf
 echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 
-echo "# Backup name should be unique, changing this may disrupt the backup jobs. Backup names should be renamed using the --rename option." >> /opt/sbu/jobs/$NAME/$NAME.conf
+echo "# Backup name should be unique, changing this may disrupt the backup jobs." >> /opt/sbu/jobs/$NAME/$NAME.conf
 echo "Name="$NAME >> /opt/sbu/jobs/$NAME/$NAME.conf
 echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 
@@ -93,21 +93,21 @@ if [ "$SETPERMS" != "no-perms" ]; then
 	fi
 
 	if [ "$SETOWNER" == "copy" ]; then
-		echo "# Destination owner permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. If DestPerms is set to no-perms or copy then Owner and Group settings are ignored." >> /opt/sbu/jobs/$NAME/$NAME.conf
+		echo "# Destination owner permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. Owner and Group only take effect when both are set, and are ignored if DestPerms is set to no-perms." >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "DestOwner=copy" >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	else
-		echo "# Destination owner permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. If DestPerms is set to no-perms or copy then Owner and Group settings are ignored." >> /opt/sbu/jobs/$NAME/$NAME.conf
+		echo "# Destination owner permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. Owner and Group only take effect when both are set, and are ignored if DestPerms is set to no-perms." >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "DestOwner=$SETOWNER" >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	fi
 
 	if [ "$SETGROUP" == "copy" ]; then
-		echo "# Destination group permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. If DestPerms is set to no-perms or copy then Owner and Group settings are ignored." >> /opt/sbu/jobs/$NAME/$NAME.conf
+		echo "# Destination group permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. Owner and Group only take effect when both are set, and are ignored if DestPerms is set to no-perms." >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "DestGroup=copy" >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	else
-		echo "# Destination group permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. If DestPerms is set to no-perms or copy then Owner and Group settings are ignored." >> /opt/sbu/jobs/$NAME/$NAME.conf
+		echo "# Destination group permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. Owner and Group only take effect when both are set, and are ignored if DestPerms is set to no-perms." >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "DestGroup=$SETGROUP" >> /opt/sbu/jobs/$NAME/$NAME.conf
 		echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	fi
@@ -118,10 +118,10 @@ else
 	echo "# If set to no-perms then rsync will not attempt to do anything with permissions and the destination will inherit permissions set by the storage device." >> /opt/sbu/jobs/$NAME/$NAME.conf
 	echo "DestPerms=no-perms" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
-	echo "# Destination owner permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. If DestPerms is set to no-perms or copy then Owner and Group settings are ignored." >> /opt/sbu/jobs/$NAME/$NAME.conf
+	echo "# Destination owner permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. Owner and Group only take effect when both are set, and are ignored if DestPerms is set to no-perms." >> /opt/sbu/jobs/$NAME/$NAME.conf
 	echo "DestOwner=no-perms" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
-	echo "# Destination group permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. If DestPerms is set to no-perms or copy then Owner and Group settings are ignored." >> /opt/sbu/jobs/$NAME/$NAME.conf
+	echo "# Destination group permissions are set here. If set to copy rsync will attempt to retain permissions, errors will show in the sbulog for the job. Owner and Group only take effect when both are set, and are ignored if DestPerms is set to no-perms." >> /opt/sbu/jobs/$NAME/$NAME.conf
 	echo "DestGroup=no-perms" >> /opt/sbu/jobs/$NAME/$NAME.conf
 	echo "" >> /opt/sbu/jobs/$NAME/$NAME.conf
 fi

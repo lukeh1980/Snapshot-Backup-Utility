@@ -1,4 +1,3 @@
 #!/bin/bash
-# Scripts & Commands listed below will run on bootup (in /etc/rc.d/rc.local)
-#/opt/sbu/source/check-config.sh
+# Scripts & Commands listed below will run on bootup (from sbu.service or rc.local)
 /opt/sbu/source/check-delete-queue.sh

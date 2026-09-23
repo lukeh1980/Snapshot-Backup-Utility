@@ -23,7 +23,7 @@
 source /opt/sbu/source/functions
 
 # Initialize variables:
-REMOVE=0; CLEAN=0; STOP=0; START=0; RESTART=0; FORCE=0; SOFT=0; NEWJOB=0; SETPERMS="copy"; SETGROUP="copy"; SETOWNER="copy"; NOPERMS=0; EXCLUDE=0
+REMOVE=0; CLEAN=0; STOP=0; START=0; RESTART=0; FORCE=0; NEWJOB=0; SETPERMS="copy"; SETGROUP="copy"; SETOWNER="copy"; NOPERMS=0; EXCLUDE=0
 
 # First get all input from sbu:
 
@@ -33,7 +33,7 @@ while [ "$1" != "" ]; do
                                 STATUS=1
 								NAME=$1
                                 ;;
-		-f | --force )   		shift
+		-f | --force )
                                 FORCE=1
                                 ;;
 		--autostart )     		shift
@@ -57,9 +57,6 @@ while [ "$1" != "" ]; do
                                 RESTART=1
 								NAME=$1
                                 ;;
-		--soft )     			shift
-                                SOFT=1
-                                ;;
         --remove )     			shift
                                 REMOVE=1
 								NAME=$1
@@ -72,7 +69,7 @@ while [ "$1" != "" ]; do
 								REINITIALIZE=1
 								NAME=$1
 								;;
-		--version )				shift
+		--version )
 								VERSION=1
 								;;
 		-s | --source )         shift
@@ -107,7 +104,7 @@ while [ "$1" != "" ]; do
 		-r | --retention )		shift
 								RETENTION=$1
 								;;
-		--no-perms )			shift
+		--no-perms )
 								NOPERMS=1
 								;;
 		--set-perms )			shift
@@ -119,7 +116,7 @@ while [ "$1" != "" ]; do
 		--set-group )			shift
 								SETGROUP=$1
 								;;
-		-h | --help )			shift
+		-h | --help )
 								usage
                                 exit
                                 ;;
@@ -141,45 +138,30 @@ if [[ $SHOWCONFIG -eq 1 ]]; then
 		clear
 		echo "-----$NAME Config-----"
 		echo ""
-		while read -r line
-		do	
-			if [[ $line == *"Source="* ]]; then
-				echo "Source "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"Dest="* ]]; then
-				echo "Destination "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"Interval="* ]]; then
-				echo "Interval "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"Retention="* ]]; then
-				echo "Retention "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"Autostart="* ]]; then
-				echo "Autostart "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"FullSync="* ]]; then
-				echo "Full Sync "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"DestPerms="* ]]; then
-				echo "Destination Permissions "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"DestOwner="* ]]; then
-				echo "Destination Owner "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-			if [[ $line == *"DestGroup="* ]]; then
-				echo "Destination Group "$(echo "$line" | cut -d '=' -f 2)
-				echo ""
-			fi
-		done < "/opt/sbu/jobs/$NAME/$NAME.conf"
+		# In a subshell: load_job_config populates the same variable names the
+		# option parser uses (AUTOSTART, INTERVAL, ...), and later blocks in this
+		# script act on those. Reading a config must not look like a CLI request.
+		(
+		load_job_config "$NAME"
+		echo "Source $SOURCE"
+		echo ""
+		echo "Destination $DEST"
+		echo ""
+		echo "Interval $INTERVAL"
+		echo ""
+		echo "Retention $RETENTION"
+		echo ""
+		echo "Autostart $AUTOSTART"
+		echo ""
+		echo "Full Sync $FULLSYNC"
+		echo ""
+		echo "Destination Permissions $SETPERMS"
+		echo ""
+		echo "Destination Owner $SETOWNER"
+		echo ""
+		echo "Destination Group $SETGROUP"
+		echo ""
+		)
 	fi
 fi
 
@@ -251,20 +233,7 @@ if [[ $STOP -eq 1 ]]; then
 		echo "ERROR: Can't stop job, please enter a job name."
 		exit
 	fi
-	if [[ $SOFT -eq 0 ]]; then
-		/opt/sbu/source/stop-job.sh $NAME
-	else
-		while :
-		do
-			CURRSTATUS=$(/opt/sbu/source/get-status.sh $NAME)
-			if [ "$CURRSTATUS" == "$NAME idle" ]; then
-				/opt/sbu/source/stop-job.sh $NAME
-				exit
-			else
-				sleep 1
-			fi
-		done
-	fi
+	/opt/sbu/source/stop-job.sh $NAME
 	exit
 fi
 
@@ -288,7 +257,7 @@ if [[ $START -eq 1 ]]; then
 	fi
 	
 	PID=$(pgrep -f "/opt/sbu/source/run-job.sh $NAME")
-	if [[ "$PID" > 0 ]]; then
+	if [[ -n "$PID" ]]; then
 		echo "$NAME already running..."
 		exit
 	else
@@ -314,13 +283,7 @@ if [[ $SETRETENTION -eq 1 ]]; then
 	else
 		if [ -d "/opt/sbu/jobs/$NAME" ]; then
 			echo "Setting retention to $NEWRETENTION"
-			while read -r line
-			do
-				if [[ $line == *"Retention"* ]]; then
-					OLDRETENTION=$(echo "$line" | cut -d '=' -f 2)
-				fi
-			done < "/opt/sbu/jobs/$NAME/$NAME.conf"
-			sed -i -e 's/Retention='$OLDRETENTION'/Retention='$NEWRETENTION'/g' /opt/sbu/jobs/$NAME/$NAME.conf
+			set_config_value "/opt/sbu/jobs/${NAME}/${NAME}.conf" "Retention" "$NEWRETENTION"
 			exit
 		else
 			echo "$NAME job does not exist!"
@@ -335,13 +298,7 @@ if [[ $SETINTERVAL -eq 1 ]]; then
 	else
 		if [ -d "/opt/sbu/jobs/$NAME" ]; then
 			echo "Setting interval to $NEWINTERVAL"
-			while read -r line
-			do
-				if [[ $line == *"Interval"* ]]; then
-					OLDINTERVAL=$(echo "$line" | cut -d '=' -f 2)
-				fi
-			done < "/opt/sbu/jobs/$NAME/$NAME.conf"
-			sed -i -e 's/Interval='$OLDINTERVAL'/Interval='$NEWINTERVAL'/g' /opt/sbu/jobs/$NAME/$NAME.conf
+			set_config_value "/opt/sbu/jobs/${NAME}/${NAME}.conf" "Interval" "$NEWINTERVAL"
 			exit
 		else
 			echo "$NAME job does not exist!"
@@ -422,29 +379,41 @@ if [[ $NEWJOB -eq 1 ]]; then
 
 	if [ -z "$SOURCE" ]; then
 	echo "ERROR: No source directory selected!"
-	echo "Usage Example: sbu --name my-backup --source /my/source/dir --dest /my/backup/dest/ --interval 30 --days-to-keep 30"
+	echo "Usage Example: sbu --create my-backup --source /my/source/dir --dest /my/backup/dest --interval 30 --retention 30"
 	exit
 	fi
 
 	if [ -z "$DEST" ]; then
 	echo "ERROR: No destination directory selected!"
-	echo "Usage Example: sbu --name my-backup --source /my/source/dir --dest /my/backup/dest/ --interval 30 --days-to-keep 30"
+	echo "Usage Example: sbu --create my-backup --source /my/source/dir --dest /my/backup/dest --interval 30 --retention 30"
 	exit
 	fi
 
 	if [ -z "$NAME" ]; then
 	echo "ERROR: Please enter a backup name!"
-	echo "Usage Example: sbu --name my-backup --source /my/source/dir --dest /my/backup/dest/ --interval 30 --days-to-keep 30"
+	echo "Usage Example: sbu --create my-backup --source /my/source/dir --dest /my/backup/dest --interval 30 --retention 30"
 	exit
 	fi
 	
+	if [ "$SETPERMS" != "copy" ] && [ "$SETPERMS" != "no-perms" ] && ! { [[ "$SETPERMS" =~ ^[0-9]+$ ]] && [[ $((10#$SETPERMS)) -gt 0 ]]; }; then
+		echo "WARNING: --set-perms takes numerical permissions (e.g. 0755); '$SETPERMS' is ignored and permissions will be copied."
+	fi
+	if { [ "$SETOWNER" == "copy" ] && [ "$SETGROUP" != "copy" ]; } || { [ "$SETOWNER" != "copy" ] && [ "$SETGROUP" == "copy" ]; }; then
+		echo "WARNING: --set-owner and --set-group only take effect when both are given; ownership will be copied."
+	fi
+
 	if [[ $NOPERMS -eq 1 ]]; then
 		SETPERMS="no-perms"
 		SETOWNER="no-perms"
 		SETGROUP="no-perms"
 	fi
 	
-	nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" $NAME $INTERVAL $RETENTION on $SETPERMS $SETOWNER $SETGROUP $EXCLUDEFILE &>/dev/null &
+	# Apply the documented defaults here and quote every argument: an omitted --interval or
+	# --retention used to vanish from the unquoted list and shift every later value into the
+	# wrong config key (Retention=on, i.e. zero days, so no snapshot history was ever kept).
+	[ -z "$INTERVAL" ] && INTERVAL=60
+	[ -z "$RETENTION" ] && RETENTION=30
+	nohup /opt/sbu/source/create-new-job.sh "${SOURCE}" "${DEST}" "$NAME" "$INTERVAL" "$RETENTION" on "$SETPERMS" "$SETOWNER" "$SETGROUP" "$EXCLUDEFILE" &>/dev/null &
 	sleep 1
 	
 	if [ -s "/var/log/sbu/$NAME-job-creation-error" ]; then

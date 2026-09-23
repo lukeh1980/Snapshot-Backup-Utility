@@ -23,11 +23,14 @@
 source /opt/sbu/source/functions
 source /opt/sbu/source/header
 
+NAME=$1
+
+# Stop the job first: once its config is deleted, stop-job.sh can no longer look it up.
+if [[ $(checkStatus $NAME) -gt 0 ]]; then
+	/opt/sbu/sbu --stop $NAME
+fi
+
 rm -rf /var/log/sbu/$NAME
 rm -rf /opt/sbu/jobs/$NAME
 grep -v "/opt/sbu/sbu --start $NAME" /opt/sbu/source/autostart.sh > /opt/sbu/source/autostart.tmp; mv /opt/sbu/source/autostart.tmp /opt/sbu/source/autostart.sh 
 chmod a+x /opt/sbu/source/*
-
-if [[ $(checkStatus $NAME) -gt 0 ]]; then
-	/opt/sbu/sbu --stop $NAME
-fi
